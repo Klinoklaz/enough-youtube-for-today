@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      .vertical-pad {
+        height: 0.5em;
+      }
+      .note {
+        font-size: small;
+        line-height: 1em;
+        color: gray;
+      }
+      #note-scroll {
+        display: none;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          color: white;
+          background-color: rgb(41, 41, 41);
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <input type="checkbox" id="shorts" name="shorts">
+    <label for="shorts">Hide shorts on homepage</label>
+    <div class="vertical-pad"></div>
+
+    <input type="checkbox" id="related-shorts" name="related-shorts">
+    <label for="related-shorts">Hide shorts in related videos</label>
+    <div class="vertical-pad"></div>
+
+    <input type="checkbox" id="related" name="related">
+    <label for="related">Hide related videos</label>
+    <div class="vertical-pad"></div>
+
+    <input type="checkbox" id="comments" name="comments">
+    <label for="comments">Hide comment section</label>
+    <div class="vertical-pad"></div>
+
+    <input type="checkbox" id="watch-next" name="watch-next">
+    <label for="watch-next">Hide watch next</label>
+    <div class="vertical-pad"></div>
+
+    <input type="checkbox" id="next-shorts" name="next-shorts">
+    <label for="next-shorts">Disable scrolling in shorts</label>
+    <div class="vertical-pad"></div>
+
+    <fieldset>
+      <legend>Screen Scrolling</legend>
+      <input type="radio" id="scroll-none" name="scrolling" value="none">
+      <label for="scroll-none">None</label>
+      <input type="radio" id="scroll-partial" name="scrolling" value="partial">
+      <label for="scroll-partial">Partial</label>
+      <input type="radio" id="scroll-allow" name="scrolling" value="allow">
+      <label for="scroll-allow">Allow</label>
+      <p class="note" id="note-scroll">
+        * This doesn't affect watch history, playlists, search results, etc.
+      </p>
+    </fieldset>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
