@@ -4,6 +4,8 @@ function setCheckbox(id, values) {
 
 const dailyLimit = document.querySelector('#daily-limit')
 const weeklyLimit = document.querySelector('#weekly-limit')
+const dailyLimitLabel = document.querySelector('#daily-limit-label')
+const weeklyLimitLabel = document.querySelector('#weekly-limit-label')
 
 // init
 browser.storage.sync.get().then(res => {
@@ -19,10 +21,8 @@ browser.storage.sync.get().then(res => {
     dailyLimit.value = (res?.timeLimit?.daily ?? 0) / 1000 / 60
     weeklyLimit.value = (res?.timeLimit?.weekly ?? 0) / 1000 / 60
     // label text
-    dailyLimit.nextElementSibling.
-        firstElementChild.innerText = formatTime(dailyLimit.value)
-    weeklyLimit.nextElementSibling.
-        firstElementChild.innerText = formatTime(weeklyLimit.value)
+    dailyLimitLabel.innerText = formatTime(dailyLimit.value)
+    weeklyLimitLabel.innerText = formatTime(weeklyLimit.value)
 })
 
 function formatTime(minutes) {
@@ -45,9 +45,7 @@ dailyLimit.addEventListener('change', e => {
             weekly: weeklyLimit.value * 1000 * 60
         }
     })
-    // label text
-    dailyLimit.nextElementSibling.
-        firstElementChild.innerText = formatTime(e.target.value)
+    dailyLimitLabel.innerText = formatTime(e.target.value)
 })
 weeklyLimit.addEventListener('change', e => {
     browser.storage.sync.set({
@@ -56,8 +54,7 @@ weeklyLimit.addEventListener('change', e => {
             weekly: e.target.value * 1000 * 60
         }
     })
-    weeklyLimit.nextElementSibling.
-        firstElementChild.innerText = formatTime(e.target.value)
+    weeklyLimitLabel.innerText = formatTime(e.target.value)
 })
 
 document.querySelectorAll('input[type="checkbox"]').forEach(item => {
