@@ -13,6 +13,12 @@
       #note-scroll {
         display: none;
       }
+      body {
+        max-width: 320px;
+      }
+      .range-label {
+        vertical-align: top;
+      }
       @media (prefers-color-scheme: dark) {
         body {
           color: white;
@@ -45,6 +51,22 @@
 
     <input type="checkbox" id="next-shorts" name="next-shorts">
     <label for="next-shorts">Disable scrolling in shorts</label>
+    <div class="vertical-pad"></div>
+
+    <fieldset>
+      <legend>Usage limit</legend>
+      <input type="range" id="daily-limit" name="daily-limit"
+        min="0" max="180" step="1">
+      <label for="daily-limit" class="range-label">
+        Daily <span class="note"></span>
+      </label>
+      <div class="vertical-pad"></div>
+      <input type="range" id="weekly-limit" name="weekly-limit"
+        min="0" max="1440" step="1">
+      <label for="weekly-limit" class="range-label">
+        Weekly <span class="note"></span>
+      </label>
+    </fieldset>
     <div class="vertical-pad"></div>
 
     <fieldset>
