@@ -129,6 +129,13 @@ function blockScreen() {
     mask.innerText = 'Hey, Time to Rest!'
     mask.setAttribute('class', 'eytft-page-mask')
 
+    // pause video (if any)
+    const vid = document.querySelector('video')
+    if (vid && !vid.paused) {
+        vid.pause() // doesn't work for shorts
+        document.querySelector('#shorts-player')?.click()
+    }
+
     setScrolling('none')
     addStyle('page-blur', 'ytd-app { filter: blur(5px); }')
     document.body.appendChild(mask)
