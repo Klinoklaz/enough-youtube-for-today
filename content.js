@@ -69,18 +69,7 @@ function setPlaybackRate(retry) {
         }, retry * 1000)
         return
     }
-    // detect music video:
-    // A. check like button animation config
-    // `body.textContent.includes('animated_like_music')`
-    // this doesn't work across navigation
-    // B. check description
-    // `$('#footer-section')?.innerText === 'Music'`
-    // this detects very few instances
-    // and this element probably won't load
-    if (playbackCtl == 1 ||
-        document.querySelector('#footer-section')?.innerText !== 'Music') {
-        vid.playbackRate = playbackCtl
-    }
+    vid.playbackRate = playbackCtl
 }
 
 function setScrolling(value) {
