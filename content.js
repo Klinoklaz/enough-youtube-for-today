@@ -142,9 +142,9 @@ function blockScreen() {
 }
 
 function unblockScreen() {
-    setScrolling(scrollCtl)
     removeStyle('page-mask')
     removeStyle('page-blur')
+    setScrolling(allowScrolling() ? 'allow' : scrollCtl)
 }
 
 function dayAndWeekStart() {
