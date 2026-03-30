@@ -36,7 +36,7 @@ function hide(name) {
             selector = 'ytd-rich-shelf-renderer[is-shorts], #guide a[title="Shorts"]'
             break
         case 'comments':
-            selector = 'ytd-comments'
+            selector = 'ytd-comments#comments'
             break
         case 'watch-next': // hide recommendation after video end
             selector = '#movie_player div[title="More videos (v)"]'
