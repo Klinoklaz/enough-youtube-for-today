@@ -71,7 +71,9 @@ document.querySelectorAll('input[name="scrolling"]').forEach(item => {
 })
 
 if ('onvisibilitychange' in document) {
-    document.querySelector('.usage-limit').style.display = 'block'
+    document.querySelectorAll('.usage-limit').forEach(item => {
+        item.style.display = 'block'
+    })
 }
 // path whitelisting requires feature 'navigate event'
 if (navigation && 'onnavigate' in navigation) {

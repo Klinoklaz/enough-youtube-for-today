@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Enough YouTube for Today",
   "version": "0.0.1",
-  "description": "A light-weight anti-addition extension for YouTube.",
+  "description": "Anti-addition extension for YouTube.",
   "icons": {
     "48": "icon.svg"
   },
