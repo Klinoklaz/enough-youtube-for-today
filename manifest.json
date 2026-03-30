@@ -14,13 +14,17 @@
       }
     }
   },
+  "permissions": ["storage"],
   "content_scripts": [
     {
       "matches": ["*://www.youtube.com/*"],
       "js": ["content.js"]
     }
   ],
-  "permissions": ["storage"],
+  "background": {
+    "scripts": ["background.js"],
+    "type": "module"
+  },
   "action": {
     "default_title": "Enough YouTube for Today",
 		"default_icon": "icon.svg",

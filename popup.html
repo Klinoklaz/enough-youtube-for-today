@@ -10,14 +10,14 @@
         line-height: 1em;
         color: gray;
       }
-      #note-scroll {
-        display: none;
-      }
       body {
         max-width: 320px;
       }
       .range-label {
         vertical-align: top;
+      }
+      #note-scroll, .usage-limit {
+        display: none;
       }
       @media (prefers-color-scheme: dark) {
         body {
@@ -53,7 +53,7 @@
     <label for="next-shorts">Disable scrolling in shorts</label>
     <div class="vertical-pad"></div>
 
-    <fieldset>
+    <fieldset class="usage-limit">
       <legend>Usage limit</legend>
       <input type="range" id="daily-limit" name="daily-limit"
         min="0" max="180" step="1">
@@ -67,7 +67,7 @@
         Weekly <span class="note" id="weekly-limit-label"></span>
       </label>
     </fieldset>
-    <div class="vertical-pad"></div>
+    <div class="vertical-pad usage-limit"></div>
 
     <fieldset>
       <legend>Screen Scrolling</legend>

@@ -28,7 +28,7 @@ browser.storage.sync.get().then(res => {
 function formatTime(minutes) {
     minutes = Math.floor(minutes)
     if (!minutes) {
-        return ''
+        return '(off)'
     }
     if (minutes < 60) {
         return '(' + minutes + 'm)'
@@ -70,6 +70,9 @@ document.querySelectorAll('input[name="scrolling"]').forEach(item => {
     })
 })
 
+if ('onvisibilitychange' in document) {
+    document.querySelector('.usage-limit').style.display = 'block'
+}
 // path whitelisting requires feature 'navigate event'
 if (navigation && 'onnavigate' in navigation) {
     document.querySelector('#note-scroll').style.display = 'block'
