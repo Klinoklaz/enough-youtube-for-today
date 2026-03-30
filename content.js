@@ -48,6 +48,41 @@ function hide(name) {
     addStyle(name, selector + '{ display: none !important; }')
 }
 
+let playbackCtl = 1
+
+function setPlaybackRate(retry) {
+    // wait for page navigation
+    if (!retry) {
+        setTimeout(() => {
+            setPlaybackRate(1)
+        }, 1000)
+        return
+    }
+    if (retry > 5) {
+        return
+    }
+    const vid = document.querySelector('video')
+    // wait for video element to render
+    if (!vid) {
+        setTimeout(() => {
+            setPlaybackRate(++retry)
+        }, retry * 1000)
+        return
+    }
+    // detect music video:
+    // A. check like button animation config
+    // `body.textContent.includes('animated_like_music')`
+    // this doesn't work across navigation
+    // B. check description
+    // `$('#footer-section')?.innerText === 'Music'`
+    // this detects very few instances
+    // and this element probably won't load
+    if (playbackCtl == 1 ||
+        document.querySelector('#footer-section')?.innerText !== 'Music') {
+        vid.playbackRate = playbackCtl
+    }
+}
+
 function setScrolling(value) {
     switch (value) {
         case 'none': // disable scrolling altogether
@@ -98,6 +133,7 @@ if (navigation && 'onnavigate' in navigation) {
         if (e.hashChange || e.downloadRequest !== null) {
             return
         }
+        setPlaybackRate()
         const path = (new URL(e.destination.url)).pathname
         for (const item of mustScroll) {
             if (path.startsWith(item)) {
@@ -180,7 +216,8 @@ function calcRemainingTime() {
     if (timeLimit.weekly) {
         const weekRem = timeLimit.weekly - timeStat.inTheWeek
         res = Math.min(res ?? weekRem, weekRem)
-        minLimit = Math.min(minLimit ?? timeLimit.weekly, timeLimit.weekly)
+        minLimit = Math.min(
+            minLimit ?? timeLimit.weekly, timeLimit.weekly)
     }
     if (!res) {
         return res
@@ -273,6 +310,11 @@ browser.storage.sync.get().then(data => {
         }
     }
 
+    if (data.playbackRate) {
+        playbackCtl = data.playbackRate
+        setPlaybackRate()
+    }
+
     scrollCtl = data.scrolling ?? scrollCtl
     if (!allowScrolling()) {
         setScrolling(scrollCtl)
@@ -294,6 +336,11 @@ browser.storage.sync.onChanged.addListener(changes => {
         } else {
             removeStyle(name)
         }
+    }
+
+    if (changes.playbackRate) {
+        playbackCtl = changes.playbackRate.newValue
+        setPlaybackRate()
     }
 
     scrollCtl = changes?.scrolling?.newValue ?? scrollCtl

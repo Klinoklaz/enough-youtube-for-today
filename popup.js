@@ -4,8 +4,10 @@ function setCheckbox(id, values) {
 
 const dailyLimit = document.querySelector('#daily-limit')
 const weeklyLimit = document.querySelector('#weekly-limit')
+const playbackRate = document.querySelector('#playback-rate')
 const dailyLimitLabel = document.querySelector('#daily-limit-label')
 const weeklyLimitLabel = document.querySelector('#weekly-limit-label')
+const playbackRateLabel = document.querySelector('#playback-rate + label')
 
 // init
 browser.storage.sync.get().then(res => {
@@ -17,10 +19,12 @@ browser.storage.sync.get().then(res => {
     setCheckbox('next-shorts', res)
     setCheckbox('related-shorts', res)
     setCheckbox('scroll-' + (res.scrolling ?? 'partial'), res)
+    playbackRate.value = res?.playbackRate ?? 1
     // millisec to min
     dailyLimit.value = (res?.timeLimit?.daily ?? 0) / 1000 / 60
     weeklyLimit.value = (res?.timeLimit?.weekly ?? 0) / 1000 / 60
     // label text
+    playbackRateLabel.innerText = playbackRate.value + 'x'
     dailyLimitLabel.innerText = formatTime(dailyLimit.value)
     weeklyLimitLabel.innerText = formatTime(weeklyLimit.value)
 })
@@ -57,6 +61,11 @@ weeklyLimit.addEventListener('change', e => {
     weeklyLimitLabel.innerText = formatTime(e.target.value)
 })
 
+playbackRate.addEventListener('change', e => {
+    playbackRateLabel.innerText = playbackRate.value + 'x'
+    browser.storage.sync.set({ playbackRate: e.target.value })
+})
+
 document.querySelectorAll('input[type="checkbox"]').forEach(item => {
     item.addEventListener('change', e => {
         let val = {}
@@ -70,12 +79,14 @@ document.querySelectorAll('input[name="scrolling"]').forEach(item => {
     })
 })
 
+// feature detection
 if ('onvisibilitychange' in document) {
-    document.querySelectorAll('.usage-limit').forEach(item => {
+    document.querySelectorAll('.require-vis').forEach(item => {
         item.style.display = 'block'
     })
 }
-// path whitelisting requires feature 'navigate event'
 if (navigation && 'onnavigate' in navigation) {
-    document.querySelector('#note-scroll').style.display = 'block'
+    document.querySelectorAll('.require-nav').forEach(item => {
+        item.style.display = 'block'
+    })
 }

@@ -10,13 +10,16 @@
         line-height: 1em;
         color: gray;
       }
+      p.note {
+        margin: 0.5em 0;
+      }
       body {
-        max-width: 320px;
+        max-width: 325px;
       }
       .range-label {
         vertical-align: top;
       }
-      #note-scroll, .usage-limit {
+      .require-nav, .require-vis {
         display: none;
       }
       @media (prefers-color-scheme: dark) {
@@ -53,7 +56,7 @@
     <label for="next-shorts">Disable scrolling in shorts</label>
     <div class="vertical-pad"></div>
 
-    <fieldset class="usage-limit">
+    <fieldset class="require-vis">
       <legend>Usage limit</legend>
       <input type="range" id="daily-limit" name="daily-limit"
         min="0" max="180" step="1">
@@ -70,7 +73,18 @@
         * You can switch to a non-YouTube tab or minimize the browser to pause timing.
       </p>
     </fieldset>
-    <div class="vertical-pad usage-limit"></div>
+    <div class="vertical-pad require-vis"></div>
+
+    <fieldset class="require-nav">
+      <legend>Default Speed</legend>
+      <input type="range" id="playback-rate" name="playback-rate"
+        min="0.25" max="2" step="0.25">
+      <label for="playback-rate" class="range-label">1x</label>
+      <p class="note">
+        * It'll try to avoid altering playback speed of music video.
+      </p>
+    </fieldset>
+    <div class="vertical-pad require-nav"></div>
 
     <fieldset>
       <legend>Screen Scrolling</legend>
@@ -80,7 +94,7 @@
       <label for="scroll-partial">Partial</label>
       <input type="radio" id="scroll-allow" name="scrolling" value="allow">
       <label for="scroll-allow">Allow</label>
-      <p class="note" id="note-scroll">
+      <p class="note" class="require-nav">
         * This doesn't affect watch history, playlists, search results, etc.
       </p>
     </fieldset>
