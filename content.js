@@ -49,16 +49,19 @@ function hide(name) {
 }
 
 const playbackCtl = {
+    retry: 10,
     id: null,
+    reset: function() {
+        this.id = null
+        this.retry = 10
+    },
     rate: 1,
-    retry: 10
 }
 
 function playbackCtlExec() {
     if (playbackCtl.retry-- <= 0) {
         clearInterval(playbackCtl.id)
-        playbackCtl.retry = 10
-        playbackCtl.id = null
+        playbackCtl.reset()
         return
     }
     const vid = document.querySelector('video')
@@ -71,7 +74,8 @@ function playbackCtlExec() {
 
 function setPlaybackRate() {
     if (playbackCtl.id) {
-        return
+        clearInterval(playbackCtl.id)
+        playbackCtl.reset()
     }
     // not in watch page
     if (allowScrolling()) {
@@ -103,7 +107,7 @@ function updateMVDB() {
     if (!MVDB.init) {
         MVDB.isMV = () => {
             const match = location.search.match(v)
-            return MVDB.data.has(match[1] ?? '')
+            return match && MVDB.data.has(match[1] ?? '')
         }
         MVDB.init = true
     }
