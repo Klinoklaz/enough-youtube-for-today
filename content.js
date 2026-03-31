@@ -48,28 +48,78 @@ function hide(name) {
     addStyle(name, selector + '{ display: none !important; }')
 }
 
-let playbackCtl = 1
+const playbackCtl = {
+    id: null,
+    rate: 1,
+    retry: 10
+}
 
-function setPlaybackRate(retry) {
-    // wait for page navigation
-    if (!retry) {
-        setTimeout(() => {
-            setPlaybackRate(1)
-        }, 1000)
-        return
-    }
-    if (retry > 5) {
+function playbackCtlExec() {
+    if (playbackCtl.retry-- <= 0) {
+        clearInterval(playbackCtl.id)
+        playbackCtl.retry = 10
+        playbackCtl.id = null
         return
     }
     const vid = document.querySelector('video')
-    // wait for video element to render
     if (!vid) {
-        setTimeout(() => {
-            setPlaybackRate(++retry)
-        }, retry * 1000)
         return
     }
-    vid.playbackRate = playbackCtl
+    vid.playbackRate = MVDB.isMV() ? 1 : playbackCtl.rate
+    updateMVDB()
+}
+
+function setPlaybackRate() {
+    if (playbackCtl.id) {
+        return
+    }
+    // not in watch page
+    if (allowScrolling()) {
+        setTimeout(updateMVDB, 2000)
+        return
+    }
+    playbackCtl.id = setInterval(playbackCtlExec, 2000)
+}
+
+const MVDB = {
+    data: new Map,
+    init: false,
+    // check like button animation config
+    // this won't work across navigation, one-time use only
+    isMV: function() {
+        const res = document.body.textContent
+            .includes('animated_like_music')
+        if (res) {
+            const search = new URLSearchParams(location.search)
+            this.data.set(search.get('v'), true)
+        }
+        return res
+    }
+}
+
+function updateMVDB() {
+    const v = /[?&]v=([0-9a-zA-Z_-]+)/
+
+    if (!MVDB.init) {
+        MVDB.isMV = () => {
+            const match = location.search.match(v)
+            return MVDB.data.has(match[1] ?? '')
+        }
+        MVDB.init = true
+    }
+
+    document.addEventListener('scrollend', () => {
+        setTimeout(updateMVDB, 1000)
+    })
+    // thumbnail with the music (& probably? other special) icon
+    const selector = 'a:has(yt-thumbnail-view-model .ytSpecIconShapeHost)'
+    document.querySelectorAll(selector).forEach(item => {
+        const match = item.getAttribute('href')?.match(v)
+        if (!match || !match[1]) {
+            return
+        }
+        MVDB.data.set(match[1], true)
+    })
 }
 
 function setScrolling(value) {
@@ -300,7 +350,7 @@ browser.storage.sync.get().then(data => {
     }
 
     if (data.playbackRate) {
-        playbackCtl = data.playbackRate
+        playbackCtl.rate = data.playbackRate
         setPlaybackRate()
     }
 
@@ -328,7 +378,7 @@ browser.storage.sync.onChanged.addListener(changes => {
     }
 
     if (changes.playbackRate) {
-        playbackCtl = changes.playbackRate.newValue
+        playbackCtl.rate = changes.playbackRate.newValue
         setPlaybackRate()
     }
 
