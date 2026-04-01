@@ -1,37 +1,38 @@
+if (HAS_VIS_CHANGE) {
+    document.querySelectorAll('.require-vis').forEach(item => {
+        item.style.display = 'block'
+    })
+}
+if (HAS_NAVIGATION) {
+    document.querySelectorAll('.require-nav').forEach(item => {
+        item.style.display = 'block'
+    })
+}
+
 function setCheckbox(id, values) {
     document.querySelector('#' + id).checked = values[id] ?? true
 }
 
 const dailyLimit = document.querySelector('#daily-limit')
 const weeklyLimit = document.querySelector('#weekly-limit')
-const playbackRate = document.querySelector('#playback-rate')
+const playback = document.querySelector('#playback-rate')
 const dailyLimitLabel = document.querySelector('#daily-limit-label')
 const weeklyLimitLabel = document.querySelector('#weekly-limit-label')
-const playbackRateLabel = document.querySelector('#playback-rate + label')
-
-const hideable = [
-    'related',
-    'comments',
-    'shorts',
-    'playables',
-    'watch-next',
-    'next-shorts',
-    'related-shorts',
-]
+const playbackLabel = document.querySelector('#playback-rate + label')
 
 // init
 browser.storage.sync.get().then(res => {
     res = res ?? {}
-    hideable.forEach(item => {
+    for (const item in hideableParts) {
         setCheckbox(item, res)
-    })
+    }
     setCheckbox('scroll-' + (res.scrolling ?? 'partial'), res)
-    playbackRate.value = res?.playbackRate ?? 1
+    playback.value = res?.playbackRate ?? 1
     // millisec to min
     dailyLimit.value = (res?.timeLimit?.daily ?? 0) / 1000 / 60
     weeklyLimit.value = (res?.timeLimit?.weekly ?? 0) / 1000 / 60
     // label text
-    playbackRateLabel.innerText = playbackRate.value + 'x'
+    playbackLabel.innerText = playback.value + 'x'
     dailyLimitLabel.innerText = formatTime(dailyLimit.value)
     weeklyLimitLabel.innerText = formatTime(weeklyLimit.value)
 })
@@ -68,8 +69,8 @@ weeklyLimit.addEventListener('change', e => {
     weeklyLimitLabel.innerText = formatTime(e.target.value)
 })
 
-playbackRate.addEventListener('change', e => {
-    playbackRateLabel.innerText = playbackRate.value + 'x'
+playback.addEventListener('change', e => {
+    playbackLabel.innerText = playback.value + 'x'
     browser.storage.sync.set({ playbackRate: e.target.value })
 })
 
@@ -85,15 +86,3 @@ document.querySelectorAll('input[name="scrolling"]').forEach(item => {
         browser.storage.sync.set({ scrolling: e.target.value })
     })
 })
-
-// feature detection
-if ('onvisibilitychange' in document) {
-    document.querySelectorAll('.require-vis').forEach(item => {
-        item.style.display = 'block'
-    })
-}
-if (navigation && 'onnavigate' in navigation) {
-    document.querySelectorAll('.require-nav').forEach(item => {
-        item.style.display = 'block'
-    })
-}

@@ -18,12 +18,11 @@
   "content_scripts": [
     {
       "matches": ["*://www.youtube.com/*"],
-      "js": ["content.js"]
+      "js": ["shared.js", "content.js"]
     }
   ],
   "background": {
-    "scripts": ["background.js"],
-    "type": "module"
+    "scripts": ["shared.js", "background.js"]
   },
   "action": {
     "default_title": "Enough YouTube for Today",

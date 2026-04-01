@@ -11,41 +11,8 @@ function removeStyle(name) {
     })
 }
 
-const hideable = [
-    'related',
-    'comments',
-    'shorts',
-    'playables',
-    'watch-next',
-    'next-shorts',
-    'related-shorts',
-]
-
 function hide(name) {
-    let selector
-    switch (name) {
-        case 'related-shorts': // shorts in related videos
-            selector = '#related yt-horizontal-list-renderer'
-            break
-        case 'next-shorts': // disable scrolling in shorts
-            selector = '#shorts-inner-container > div:not([id="0"])'
-            break
-        case 'related': // related videos
-            selector = '#related'
-            break
-        case 'shorts': // shorts in homepage and sidebar
-            selector = 'ytd-rich-shelf-renderer[is-shorts], #guide a[title="Shorts"]'
-            break
-        case 'comments':
-            selector = 'ytd-comments#comments'
-            break
-        case 'watch-next': // recommendation after video end
-            selector = '#movie_player div[title="More videos (v)"]'
-            break
-        case 'playables': // game recommendation on homepage
-            selector = 'ytd-rich-shelf-renderer:has(a[title="YouTube Playables"])'
-            break
-    }
+    const selector = hideableParts[name]
     if (!selector) {
         return
     }
@@ -179,9 +146,23 @@ const mustScroll = [
 let scrollCtl = 'partial'
 let allowScrolling = () => false
 
-// entering a new page doesn't necessarily reload script,
-// this is the easy solution
-if (navigation && 'onnavigate' in navigation) {
+function handleNavigate(event) {
+    if (event.hashChange || event.downloadRequest !== null) {
+        return
+    }
+    setPlaybackRate()
+    const path = (new URL(event.destination.url)).pathname
+    for (const item of mustScroll) {
+        if (path.startsWith(item)) {
+            setScrolling('allow')
+            return
+        }
+    }
+    setScrolling(scrollCtl)
+}
+
+// SPA location change detection easy solution
+if (HAS_NAVIGATION) {
     allowScrolling = () => {
         const path = window.location.pathname
         for (const item of mustScroll) {
@@ -191,21 +172,7 @@ if (navigation && 'onnavigate' in navigation) {
         }
         return false
     }
-
-    navigation.addEventListener('navigate', e => {
-        if (e.hashChange || e.downloadRequest !== null) {
-            return
-        }
-        setPlaybackRate()
-        const path = (new URL(e.destination.url)).pathname
-        for (const item of mustScroll) {
-            if (path.startsWith(item)) {
-                setScrolling('allow')
-                return
-            }
-        }
-        setScrolling(scrollCtl)
-    })
+    navigation.addEventListener('navigate', handleNavigate)
 }
 
 // blur entire screen and display reminder message
@@ -246,28 +213,12 @@ function unblockScreen() {
     setScrolling(allowScrolling() ? 'allow' : scrollCtl)
 }
 
-function dayAndWeekStart() {
-    const date = new Date
-    const dayStart = date.setUTCHours(0, 0, 0, 0)
-    const weekStart = date.setUTCDate(
-        date.getUTCDate() - date.getUTCDay())
-    return { dayStart, weekStart }
-}
-
 // millisec
 const timeLimit = {
     daily: 0,
     weekly: 0,
     init: false
 }
-
-// page stay time, millisec
-const timeStat = {
-    inTheDay: 0,
-    inTheWeek: 0,
-    init: false
-}
-Object.assign(timeStat, dayAndWeekStart())
 
 function calcRemainingTime() {
     let res = null
@@ -292,27 +243,6 @@ function calcRemainingTime() {
         res = end.setUTCHours(0, 0, 0, 0) - now + minLimit
     }
     return res
-}
-
-function updateTimeStat(start, end) {
-    const info = dayAndWeekStart()
-
-    // if crossed date or week
-    if (timeStat.dayStart < info.dayStart) {
-        timeStat.inTheDay = 0
-    }
-    if (timeStat.weekStart < info.weekStart) {
-        timeStat.inTheWeek = 0
-    }
-
-    Object.assign(timeStat, info)
-    const duration = end - start
-    timeStat.inTheDay += start < info.dayStart
-        ? end - info.dayStart
-        : duration
-    timeStat.inTheWeek += start < info.weekStart
-        ? end - info.weekStart
-        : duration
 }
 
 // pause and start should be idempotent
@@ -365,7 +295,7 @@ function pauseTimer() {
 }
 
 browser.storage.sync.get().then(data => {
-    for (const name of hideable) {
+    for (const name in hideableParts) {
         if (!data || (data[name] ?? true)) {
             hide(name)
         } else {
@@ -390,7 +320,7 @@ browser.storage.sync.get().then(data => {
 })
 
 browser.storage.sync.onChanged.addListener(changes => {
-    for (const name of hideable) {
+    for (const name in hideableParts) {
         if (!(name in changes)) {
             continue
         }
@@ -438,7 +368,15 @@ browser.storage.local.onChanged.addListener(changes => {
 })
 
 // track stay time
-if ('onvisibilitychange' in document) {
+function handleVisChange() {
+    if (document.visibilityState === 'hidden') {
+        pauseTimer()
+    } else {
+        startTimer(calcRemainingTime())
+    }
+}
+
+if (HAS_VIS_CHANGE) {
     if (document.visibilityState === 'visible') {
         if (timeLimit.init && timeStat.init) {
             startTimer(calcRemainingTime())
@@ -448,11 +386,5 @@ if ('onvisibilitychange' in document) {
             }, 1000)
         }
     }
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') {
-            pauseTimer()
-        } else {
-            startTimer(calcRemainingTime())
-        }
-    })
+    document.addEventListener('visibilitychange', handleVisChange)
 }
