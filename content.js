@@ -69,7 +69,7 @@ function playbackCtlExec() {
         return
     }
     vid.playbackRate = MVDB.isMV() ? 1 : playbackCtl.rate
-    updateMVDB()
+    playbackCtl.retry % 2 === 1 && updateMVDB()
 }
 
 function setPlaybackRate() {
@@ -78,8 +78,8 @@ function setPlaybackRate() {
         playbackCtl.reset()
     }
     // not in watch page
-    if (allowScrolling()) {
-        setTimeout(updateMVDB, 2000)
+    if (allowScrolling() && !MVDB.updating) {
+        MVDB.updating = setTimeout(updateMVDB, 2000)
         return
     }
     playbackCtl.id = setInterval(playbackCtlExec, 2000)
@@ -98,7 +98,19 @@ const MVDB = {
             this.data.set(search.get('v'), true)
         }
         return res
+    },
+    updating: null
+}
+
+function handleScrollPagination() {
+    const pos = window.scrollY + window.innerHeight
+    if (pos + 1 < document.scrollingElement.scrollHeight) {
+        return
     }
+    if (MVDB.updating) {
+        clearTimeout(MVDB.updating)
+    }
+    MVDB.updating = setTimeout(updateMVDB, 1000)
 }
 
 function updateMVDB() {
@@ -111,10 +123,11 @@ function updateMVDB() {
         }
         MVDB.init = true
     }
+    if (MVDB.updating) {
+        clearTimeout(MVDB.updating)
+        MVDB.updating = null
+    }
 
-    document.addEventListener('scrollend', () => {
-        setTimeout(updateMVDB, 1000)
-    })
     // thumbnail with the music (& probably? other special) icon
     const selector = 'a:has(yt-thumbnail-view-model .ytSpecIconShapeHost)'
     document.querySelectorAll(selector).forEach(item => {
@@ -124,6 +137,9 @@ function updateMVDB() {
         }
         MVDB.data.set(match[1], true)
     })
+
+    // no anon function to assure idempotency
+    document.addEventListener('scrollend', handleScrollPagination)
 }
 
 function setScrolling(value) {
