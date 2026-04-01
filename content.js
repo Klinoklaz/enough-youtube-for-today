@@ -160,9 +160,7 @@ const scrollConfig = {
 
 function setScrolling(value) {
     for (const item in scrollConfig) {
-        if (item !== value) {
-            removeStyle('scroll-' + item)
-        }
+        removeStyle('scroll-' + item)
     }
     if (scrollConfig.setLong) {
         clearTimeout(scrollConfig.setLong)
