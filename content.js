@@ -92,15 +92,14 @@ const MVDB = {
     updating: null
 }
 
-let scrollStart = 0, scrollEnd = 0
+let lastScrollY = 0
 
 function handleScrollPagination() {
-    if (window.scrollY < scrollStart) {
+    if (window.scrollY < lastScrollY) {
         return
     }
-    scrollEnd = window.scrollY
-    const distance = scrollEnd - scrollStart
-    scrollStart = scrollEnd
+    const distance = window.scrollY - lastScrollY
+    lastScrollY = window.scrollY
     // scroll pass half screen, assume new content is rendered
     // not accurate
     if (distance < window.innerHeight / 2) {
@@ -141,26 +140,46 @@ function updateMVDB() {
     document.addEventListener('scrollend', handleScrollPagination)
 }
 
+const scrollConfig = {
+    // disable scrolling entirely
+    none: `body {
+        overflow-y: hidden !important;
+    }`,
+    // allow scrolling to next screen
+    short: `ytd-page-manager {
+        max-height: 200vh !important;
+        overflow-y: hidden !important;
+    }`,
+    // allow scrolling to current page bottom
+    long: () => `ytd-page-manager, ytd-app {
+        max-height: ${document.scrollingElement.scrollHeight}px !important;
+        overflow-y: hidden !important;
+    }`,
+    setLong: null
+}
+
 function setScrolling(value) {
-    switch (value) {
-        case 'none': // disable scrolling altogether
-            removeStyle('scroll-partial')
-            addStyle('scroll-none', `body {
-                overflow-y: hidden !important;
-            }`)
-            break
-        case 'allow':
-            removeStyle('scroll-partial')
-            removeStyle('scroll-none')
-            break
-        case 'partial': // allow scrolling for one screen
-            removeStyle('scroll-none')
-            addStyle('scroll-partial', `ytd-page-manager {
-                max-height: 200vh !important;
-                overflow-y: hidden !important;
-            }`)
-            break
+    for (const item in scrollConfig) {
+        if (item !== value) {
+            removeStyle('scroll-' + item)
+        }
     }
+    if (scrollConfig.setLong) {
+        clearTimeout(scrollConfig.setLong)
+        scrollConfig.setLong = null
+    }
+    if (!(value in scrollConfig)) {
+        return
+    }
+    if (value !== 'long') {
+        addStyle('scroll-' + value, scrollConfig[value])
+        return
+    }
+    // try to wait for page rendering
+    scrollConfig.setLong = setTimeout(() => {
+        scrollConfig.setLong = null
+        addStyle('scroll-long', scrollConfig.long())
+    }, 5000)
 }
 
 // path prefix whitelist
@@ -171,7 +190,7 @@ const mustScroll = [
     '/channel',
     '/playlist',
 ]
-let scrollCtl = 'partial'
+let scrollCtl = 'short'
 let allowScrolling = () => false
 
 function handleNavigate(event) {
@@ -179,6 +198,7 @@ function handleNavigate(event) {
         return
     }
     setPlaybackRate()
+    lastScrollY = 0
     const path = (new URL(event.destination.url)).pathname
     for (const item of mustScroll) {
         if (path.startsWith(item)) {

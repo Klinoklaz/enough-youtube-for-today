@@ -17,6 +17,9 @@
         max-width: 420px;
         background: #e0e0db;
       }
+      .scrolling {
+        margin-right: 0.5em;
+      }
       .range-label {
         vertical-align: top;
       }
@@ -40,37 +43,25 @@
   <body>
     <fieldset id="blocking">
       <legend>Blocking</legend>
-      <label><input type="checkbox" id="shorts" name="shorts">
-        Shorts on homepage
-      </label>
-      <label><input type="checkbox" id="relatedShorts" name="related-shorts">
-        Shorts in suggestion
-      </label>
-      <label><input type="checkbox" id="nextShorts" name="next-shorts">
-        Scrolling in shorts
-      </label>
-      <label><input type="checkbox" id="playables" name="playables">
-        YouTube playables
-      </label>
-      <label><input type="checkbox" id="related" name="related">
-        Suggestion
-      </label>
-      <label><input type="checkbox" id="watchNext" name="watch-next">
-        Watch next
-      </label>
-      <label><input type="checkbox" id="comments" name="comments">
-        Comment section
-      </label>
+      <label><input type="checkbox" id="shorts">Shorts on homepage</label>
+      <label><input type="checkbox" id="relatedShorts">Shorts in suggestion</label>
+      <label><input type="checkbox" id="nextShorts">Scrolling in shorts</label>
+      <label><input type="checkbox" id="playables">YouTube playables</label>
+      <label><input type="checkbox" id="related">Suggestion</label>
+      <label><input type="checkbox" id="watchNext">Watch next</label>
+      <label><input type="checkbox" id="comments">Comment section</label>
     </fieldset>
 
     <fieldset>
       <legend>Screen Scrolling</legend>
       <input type="radio" id="scroll-none" name="scrolling" value="none">
-      <label for="scroll-none">None</label>
-      <input type="radio" id="scroll-partial" name="scrolling" value="partial">
-      <label for="scroll-partial">Partial</label>
+      <label for="scroll-none" class="scrolling">None</label>
+      <input type="radio" id="scroll-short" name="scrolling" value="short">
+      <label for="scroll-short" class="scrolling">Short</label>
+      <input type="radio" id="scroll-long" name="scrolling" value="long">
+      <label for="scroll-long" class="scrolling">Long</label>
       <input type="radio" id="scroll-allow" name="scrolling" value="allow">
-      <label for="scroll-allow">Allow</label>
+      <label for="scroll-allow" class="scrolling">Allow</label>
       <p class="note" class="require-nav">
         * This doesn't affect watch history, playlists, search results, etc.
       </p>
@@ -78,14 +69,12 @@
 
     <fieldset class="require-vis">
       <legend>Usage Limit</legend>
-      <input type="range" id="daily-limit" name="daily-limit"
-        min="0" max="180" step="1">
+      <input type="range" id="daily-limit" min="0" max="180" step="1">
       <label for="daily-limit" class="range-label">
         Daily <span class="note" id="daily-limit-label"></span>
       </label>
       <div class="vertical-pad"></div>
-      <input type="range" id="weekly-limit" name="weekly-limit"
-        min="0" max="1440" step="1">
+      <input type="range" id="weekly-limit" min="0" max="1440" step="1">
       <label for="weekly-limit" class="range-label">
         Weekly <span class="note" id="weekly-limit-label"></span>
       </label>
@@ -96,8 +85,7 @@
 
     <fieldset class="require-nav">
       <legend>Default Speed</legend>
-      <input type="range" id="playback-rate" name="playback-rate"
-        min="0.25" max="2" step="0.25">
+      <input type="range" id="playback-rate" min="0.25" max="2" step="0.25">
       <label for="playback-rate" class="range-label">1x</label>
       <p class="note">
         * It'll try to avoid altering playback speed of music video.

@@ -26,7 +26,7 @@ browser.storage.sync.get().then(res => {
     for (const item in hideableParts) {
         setCheckbox(item, res)
     }
-    setCheckbox('scroll-' + (res.scrolling ?? 'partial'), res)
+    setCheckbox('scroll-' + (res.scrolling ?? 'short'), res)
     playback.value = res?.playbackRate ?? 1
     // millisec to min
     dailyLimit.value = (res?.timeLimit?.daily ?? 0) / 1000 / 60
@@ -74,7 +74,7 @@ playback.addEventListener('change', e => {
     browser.storage.sync.set({ playbackRate: e.target.value })
 })
 
-document.querySelectorAll('input[type="checkbox"]').forEach(item => {
+document.querySelectorAll('#blocking input').forEach(item => {
     item.addEventListener('change', e => {
         let val = {}
         val[e.target.id] = e.target.checked
