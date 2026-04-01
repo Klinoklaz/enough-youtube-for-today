@@ -1,8 +1,8 @@
 function dayAndWeekStart() {
     const date = new Date
-    const dayStart = date.setUTCHours(0, 0, 0, 0)
-    const weekStart = date.setUTCDate(
-        date.getUTCDate() - date.getUTCDay())
+    const dayStart = date.setHours(0, 0, 0, 0)
+    const weekStart = date.setDate(
+        date.getDate() - date.getDay())
     return { dayStart, weekStart }
 }
 

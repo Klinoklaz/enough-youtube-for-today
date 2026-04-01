@@ -1,3 +1,5 @@
+/// <reference path="shared.js" />
+
 browser.runtime.onMessage.addListener(message => {
     const timer = message?.timer
     if (!timer) {

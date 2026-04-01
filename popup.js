@@ -1,3 +1,5 @@
+/// <reference path="shared.js" />
+
 if (HAS_VIS_CHANGE) {
     document.querySelectorAll('.require-vis').forEach(item => {
         item.style.display = 'block'

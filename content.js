@@ -1,3 +1,5 @@
+/// <reference path="shared.js" />
+
 function addStyle(name, content) {
     const style = document.createElement('style')
     style.textContent = content
@@ -286,10 +288,10 @@ function calcRemainingTime() {
         res = timeLimit.daily - timeStat.inTheDay
     }
     if (timeLimit.weekly) {
-        const weekRem = timeLimit.weekly - timeStat.inTheWeek
-        res = Math.min(res ?? weekRem, weekRem)
-        minLimit = Math.min(
-            minLimit ?? timeLimit.weekly, timeLimit.weekly)
+        const limit = timeLimit.weekly
+        const res2 = limit - timeStat.inTheWeek
+        res = Math.min(res ?? res2, res2)
+        minLimit = Math.min(minLimit ?? limit, limit)
     }
     if (!res) {
         return res
@@ -297,8 +299,8 @@ function calcRemainingTime() {
     const now = new Date
     const end = new Date(now.getTime() + res)
     // is tomorrow
-    if (end.getUTCDate() > now.getUTCDate()) {
-        res = end.setUTCHours(0, 0, 0, 0) - now + minLimit
+    if (end.getDate() > now.getDate()) {
+        res = end.setHours(0, 0, 0, 0) - now + minLimit
     }
     return res
 }
