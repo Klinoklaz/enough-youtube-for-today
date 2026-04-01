@@ -22,17 +22,23 @@ function hide(name) {
 const playbackCtl = {
     retry: 10,
     id: null,
-    reset: function() {
-        this.id = null
-        this.retry = 10
-    },
     rate: 1,
+}
+
+function playbackCtlReset() {
+    clearInterval(playbackCtl.id)
+    playbackCtl.id = null
+    playbackCtl.retry = 10
+}
+
+function handleSpeedMenuClick() {
+    playbackCtlReset()
+    document.querySelector('video').playbackRate = 1
 }
 
 function playbackCtlExec() {
     if (playbackCtl.retry-- <= 0) {
-        clearInterval(playbackCtl.id)
-        playbackCtl.reset()
+        playbackCtlReset()
         return
     }
     const vid = document.querySelector('video')
@@ -40,13 +46,26 @@ function playbackCtlExec() {
         return
     }
     vid.playbackRate = MVDB.isMV() ? 1 : playbackCtl.rate
-    playbackCtl.retry % 2 === 1 && updateMVDB()
+    if (playbackCtl.retry % 2 === 0) {
+        return
+    }
+    updateMVDB()
+    // give up control if user choses manual setting
+    const menu = document.querySelectorAll(
+        '.ytp-menuitem .ytp-menuitem-label')
+    for (const item of menu) {
+        if (item.innerText !== 'Playback speed') {
+            continue
+        }
+        const speedMenu = item.parentElement
+        speedMenu.addEventListener('click', handleSpeedMenuClick)
+        break
+    }
 }
 
 function setPlaybackRate() {
     if (playbackCtl.id) {
-        clearInterval(playbackCtl.id)
-        playbackCtl.reset()
+        playbackCtlReset()
     }
     // not in watch page
     if (allowScrolling() && !MVDB.updating) {
