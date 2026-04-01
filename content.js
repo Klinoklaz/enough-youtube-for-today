@@ -73,9 +73,18 @@ const MVDB = {
     updating: null
 }
 
+let scrollStart = 0, scrollEnd = 0
+
 function handleScrollPagination() {
-    const pos = window.scrollY + window.innerHeight
-    if (pos + 1 < document.scrollingElement.scrollHeight) {
+    if (window.scrollY < scrollStart) {
+        return
+    }
+    scrollEnd = window.scrollY
+    const distance = scrollEnd - scrollStart
+    scrollStart = scrollEnd
+    // scroll pass half screen, assume new content is rendered
+    // not accurate
+    if (distance < window.innerHeight / 2) {
         return
     }
     if (MVDB.updating) {
