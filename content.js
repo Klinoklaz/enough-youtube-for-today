@@ -54,12 +54,11 @@ function playbackCtlExec() {
     const menu = document.querySelectorAll(
         '.ytp-menuitem .ytp-menuitem-label')
     for (const item of menu) {
-        if (item.innerText !== 'Playback speed') {
-            continue
+        if (item.innerText === 'Playback speed') {
+            const speedMenu = item.parentElement
+            speedMenu.addEventListener('click', handleSpeedMenuClick)
+            break
         }
-        const speedMenu = item.parentElement
-        speedMenu.addEventListener('click', handleSpeedMenuClick)
-        break
     }
 }
 
@@ -91,7 +90,7 @@ const MVDB = {
     },
     updating: null
 }
-
+const v = /[?&]v=([0-9a-zA-Z_-]+)/ // video id
 let lastScrollY = 0
 
 function handleScrollPagination() {
@@ -111,14 +110,27 @@ function handleScrollPagination() {
     MVDB.updating = setTimeout(updateMVDB, 1000)
 }
 
-function updateMVDB() {
-    const v = /[?&]v=([0-9a-zA-Z_-]+)/
+// this will be used across navigation
+function checkIsMV() {
+    const match = location.search.match(v)
+    if (!match || !match[1]) {
+        return false
+    }
+    if (MVDB.data.has(match[1])) {
+        return true
+    }
+    const genre = document
+        .querySelector('meta[itemprop="genre"]')?.content
+    const res = genre && genre.includes('Music')
+    if (res) {
+        MVDB.data.set(match[1], true)
+    }
+    return res
+}
 
+function updateMVDB() {
     if (!MVDB.init) {
-        MVDB.isMV = () => {
-            const match = location.search.match(v)
-            return match && MVDB.data.has(match[1] ?? '')
-        }
+        MVDB.isMV = checkIsMV
         MVDB.init = true
     }
     if (MVDB.updating) {
