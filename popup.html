@@ -2,8 +2,8 @@
 <html>
   <head>
     <style>
-      .vertical-pad {
-        height: 0.5em;
+      fieldset {
+        margin: 0.2em 0;
       }
       .note {
         font-size: small;
@@ -14,7 +14,7 @@
         margin: 0.5em 0;
       }
       body {
-        max-width: 325px;
+        max-width: 420px;
         background: #e0e0db;
       }
       .range-label {
@@ -29,33 +29,52 @@
           background-color: rgb(41, 41, 41);
         }
       }
+      #blocking {
+        display: grid;
+        gap: 0.4em 0;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
     </style>
   </head>
 
   <body>
-    <input type="checkbox" id="shorts" name="shorts">
-    <label for="shorts">Hide shorts on homepage</label>
-    <div class="vertical-pad"></div>
+    <fieldset id="blocking">
+      <legend>Blocking</legend>
+      <label><input type="checkbox" id="shorts" name="shorts">
+        Shorts on homepage
+      </label>
+      <label><input type="checkbox" id="related-shorts" name="related-shorts">
+        Shorts in suggestion
+      </label>
+      <label><input type="checkbox" id="next-shorts" name="next-shorts">
+        Scrolling in shorts
+      </label>
+      <label><input type="checkbox" id="playables" name="playables">
+        YouTube playables
+      </label>
+      <label><input type="checkbox" id="related" name="related">
+        Suggestion
+      </label>
+      <label><input type="checkbox" id="watch-next" name="watch-next">
+        Watch next
+      </label>
+      <label><input type="checkbox" id="comments" name="comments">
+        Comment section
+      </label>
+    </fieldset>
 
-    <input type="checkbox" id="related-shorts" name="related-shorts">
-    <label for="related-shorts">Hide shorts in related videos</label>
-    <div class="vertical-pad"></div>
-
-    <input type="checkbox" id="related" name="related">
-    <label for="related">Hide related videos</label>
-    <div class="vertical-pad"></div>
-
-    <input type="checkbox" id="comments" name="comments">
-    <label for="comments">Hide comment section</label>
-    <div class="vertical-pad"></div>
-
-    <input type="checkbox" id="watch-next" name="watch-next">
-    <label for="watch-next">Hide watch next</label>
-    <div class="vertical-pad"></div>
-
-    <input type="checkbox" id="next-shorts" name="next-shorts">
-    <label for="next-shorts">Disable scrolling in shorts</label>
-    <div class="vertical-pad"></div>
+    <fieldset>
+      <legend>Screen Scrolling</legend>
+      <input type="radio" id="scroll-none" name="scrolling" value="none">
+      <label for="scroll-none">None</label>
+      <input type="radio" id="scroll-partial" name="scrolling" value="partial">
+      <label for="scroll-partial">Partial</label>
+      <input type="radio" id="scroll-allow" name="scrolling" value="allow">
+      <label for="scroll-allow">Allow</label>
+      <p class="note" class="require-nav">
+        * This doesn't affect watch history, playlists, search results, etc.
+      </p>
+    </fieldset>
 
     <fieldset class="require-vis">
       <legend>Usage Limit</legend>
@@ -74,7 +93,6 @@
         * You can switch to a non-YouTube tab or minimize the browser to pause timing.
       </p>
     </fieldset>
-    <div class="vertical-pad require-vis"></div>
 
     <fieldset class="require-nav">
       <legend>Default Speed</legend>
@@ -83,20 +101,6 @@
       <label for="playback-rate" class="range-label">1x</label>
       <p class="note">
         * It'll try to avoid altering playback speed of music video.
-      </p>
-    </fieldset>
-    <div class="vertical-pad require-nav"></div>
-
-    <fieldset>
-      <legend>Screen Scrolling</legend>
-      <input type="radio" id="scroll-none" name="scrolling" value="none">
-      <label for="scroll-none">None</label>
-      <input type="radio" id="scroll-partial" name="scrolling" value="partial">
-      <label for="scroll-partial">Partial</label>
-      <input type="radio" id="scroll-allow" name="scrolling" value="allow">
-      <label for="scroll-allow">Allow</label>
-      <p class="note" class="require-nav">
-        * This doesn't affect watch history, playlists, search results, etc.
       </p>
     </fieldset>
 

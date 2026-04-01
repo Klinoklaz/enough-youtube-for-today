@@ -9,15 +9,22 @@ const dailyLimitLabel = document.querySelector('#daily-limit-label')
 const weeklyLimitLabel = document.querySelector('#weekly-limit-label')
 const playbackRateLabel = document.querySelector('#playback-rate + label')
 
+const hideable = [
+    'related',
+    'comments',
+    'shorts',
+    'playables',
+    'watch-next',
+    'next-shorts',
+    'related-shorts',
+]
+
 // init
 browser.storage.sync.get().then(res => {
     res = res ?? {}
-    setCheckbox('related', res)
-    setCheckbox('comments', res)
-    setCheckbox('shorts', res)
-    setCheckbox('watch-next', res)
-    setCheckbox('next-shorts', res)
-    setCheckbox('related-shorts', res)
+    hideable.forEach(item => {
+        setCheckbox(item, res)
+    })
     setCheckbox('scroll-' + (res.scrolling ?? 'partial'), res)
     playbackRate.value = res?.playbackRate ?? 1
     // millisec to min

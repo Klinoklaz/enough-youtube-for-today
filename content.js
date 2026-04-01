@@ -15,6 +15,7 @@ const hideable = [
     'related',
     'comments',
     'shorts',
+    'playables',
     'watch-next',
     'next-shorts',
     'related-shorts',
@@ -23,23 +24,26 @@ const hideable = [
 function hide(name) {
     let selector
     switch (name) {
-        case 'related-shorts': // hide shorts in related videos
+        case 'related-shorts': // shorts in related videos
             selector = '#related yt-horizontal-list-renderer'
             break
         case 'next-shorts': // disable scrolling in shorts
             selector = '#shorts-inner-container > div:not([id="0"])'
             break
-        case 'related': // hide related videos
+        case 'related': // related videos
             selector = '#related'
             break
-        case 'shorts': // hide shorts in homepage and sidebar
+        case 'shorts': // shorts in homepage and sidebar
             selector = 'ytd-rich-shelf-renderer[is-shorts], #guide a[title="Shorts"]'
             break
         case 'comments':
             selector = 'ytd-comments#comments'
             break
-        case 'watch-next': // hide recommendation after video end
+        case 'watch-next': // recommendation after video end
             selector = '#movie_player div[title="More videos (v)"]'
+            break
+        case 'playables': // game recommendation on homepage
+            selector = 'ytd-rich-shelf-renderer:has(a[title="YouTube Playables"])'
             break
     }
     if (!selector) {
