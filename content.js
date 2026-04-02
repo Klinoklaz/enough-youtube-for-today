@@ -64,12 +64,18 @@ function playbackCtlExec() {
     }
 }
 
-function setPlaybackRate() {
+function setPlaybackRate(url) {
     if (playbackCtl.id) {
         playbackCtlReset()
     }
+    // no known way to detect mv in playlist
+    // avoid playlists altogether
+    if (url?.searchParams?.get('list')) {
+        return
+    }
     // not in watch page
-    if (allowScrolling() && !MVDB.updating) {
+    if (allowScrolling(url?.pathname)) {
+        clearTimeout(MVDB.updating)
         MVDB.updating = setTimeout(updateMVDB, 2000)
         return
     }
@@ -209,11 +215,11 @@ function handleNavigate(event) {
     if (event.hashChange || event.downloadRequest !== null) {
         return
     }
-    setPlaybackRate()
+    const url = new URL(event.destination.url)
+    setPlaybackRate(url)
     lastScrollY = 0
-    const path = (new URL(event.destination.url)).pathname
     for (const item of mustScroll) {
-        if (path.startsWith(item)) {
+        if (url.pathname.startsWith(item)) {
             setScrolling('allow')
             return
         }
@@ -223,8 +229,8 @@ function handleNavigate(event) {
 
 // SPA location change detection easy solution
 if (HAS_NAVIGATION) {
-    allowScrolling = () => {
-        const path = window.location.pathname
+    allowScrolling = (pathname) => {
+        const path = pathname ?? window.location.pathname
         for (const item of mustScroll) {
             if (path.startsWith(item)) {
                 return true
