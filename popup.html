@@ -20,14 +20,11 @@
       input[type="range"] {
         width: 70%;
       }
-      .scrolling {
+      .mr05 {
         margin-right: 0.5em;
       }
       .range-label {
         vertical-align: top;
-      }
-      .require-nav, .require-vis {
-        display: none;
       }
       @media (prefers-color-scheme: dark) {
         body {
@@ -57,16 +54,25 @@
 
     <fieldset>
       <legend>Screen Scrolling</legend>
-      <input type="radio" id="scroll-none" name="scrolling" value="none">
-      <label for="scroll-none" class="scrolling">None</label>
-      <input type="radio" id="scroll-short" name="scrolling" value="short">
-      <label for="scroll-short" class="scrolling">Short</label>
-      <input type="radio" id="scroll-long" name="scrolling" value="long">
-      <label for="scroll-long" class="scrolling">Long</label>
-      <input type="radio" id="scroll-allow" name="scrolling" value="allow">
-      <label for="scroll-allow" class="scrolling">Allow</label>
-      <p class="note" class="require-nav">
-        * This doesn't affect watch history, playlists, search results, etc.
+      <label for="scroll-none" class="mr05">
+        <input type="radio" id="scroll-none" name="scrolling" value="none">None
+      </label>
+      <label for="scroll-short" class="mr05">
+        <input type="radio" id="scroll-short" name="scrolling" value="short">Short
+      </label>
+      <label for="scroll-long" class="mr05">
+        <input type="radio" id="scroll-long" name="scrolling" value="long">Long
+      </label>
+      <label for="scroll-allow" class="mr05">
+        <input type="radio" id="scroll-allow" name="scrolling" value="allow">Allow
+      </label>
+      <p class="note">
+        <label for="scroll-page" class="require-nav mr05">* Effective on</label>
+        <select id="scroll-page" class="require-nav">
+          <option value="home">Homepage</option>
+          <option value="watch">Watch</option>
+          <option value="history">History</option>
+        </select>
       </p>
     </fieldset>
 

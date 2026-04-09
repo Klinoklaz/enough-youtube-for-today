@@ -35,6 +35,12 @@ function updateTimeStat(start, end) {
         : duration
 }
 
+const scrollConfig = {
+    home: 'short',
+    watch: 'short',
+    history: 'short',
+}
+
 const hideableParts = {
     // recommendation after video end
     watchNext: '#movie_player div[title="More videos (v)"]',

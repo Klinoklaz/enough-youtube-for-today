@@ -74,7 +74,8 @@ function setPlaybackRate(url) {
         return
     }
     // not in watch page
-    if (allowScrolling(url?.pathname)) {
+    const path = url?.pathname ?? ''
+    if (!path.startsWith('/watch') && !path.startsWith('/shorts')) {
         clearTimeout(MVDB.updating)
         MVDB.updating = setTimeout(updateMVDB, 2000)
         return
@@ -160,84 +161,56 @@ function updateMVDB() {
     document.addEventListener('scrollend', handleScrollPagination)
 }
 
-const scrollConfig = {
+const scrollEnum = {
     // disable scrolling entirely
     none: `body {
         overflow-y: hidden !important;
     }`,
-    // allow scrolling to next screen
+    // 2.5 screens
     short: `ytd-page-manager {
-        max-height: 200vh !important;
+        max-height: 250vh !important;
         overflow-y: hidden !important;
     }`,
-    // allow scrolling to current page bottom
-    long: () => `ytd-page-manager, ytd-app {
-        max-height: ${document.scrollingElement.scrollHeight}px !important;
+    // 5 screens
+    long: `ytd-page-manager, ytd-app {
+        max-height: 500vh !important;
         overflow-y: hidden !important;
     }`,
-    setLong: null
 }
 
-function setScrolling(value) {
-    for (const item in scrollConfig) {
+function setScrolling(path, override) {
+    path = path ?? window.location.pathname
+    let name
+    if (override) {
+        name = override
+    } else if (path === '' || path === '/') {
+        name = scrollConfig.home
+    } else if (path.startsWith('/watch')) {
+        name = scrollConfig.watch
+    } else if (path.startsWith('/feed/history')) {
+        name = scrollConfig.history
+    }
+
+    for (const item in scrollEnum) {
         removeStyle('scroll-' + item)
     }
-    if (scrollConfig.setLong) {
-        clearTimeout(scrollConfig.setLong)
-        scrollConfig.setLong = null
+    if (name in scrollEnum) {
+        addStyle('scroll-' + name, scrollEnum[name])
     }
-    if (!(value in scrollConfig)) {
-        return
-    }
-    if (value !== 'long') {
-        addStyle('scroll-' + value, scrollConfig[value])
-        return
-    }
-    // try to wait for page rendering
-    scrollConfig.setLong = setTimeout(() => {
-        scrollConfig.setLong = null
-        addStyle('scroll-long', scrollConfig.long())
-    }, 5000)
 }
-
-// path prefix whitelist
-const mustScroll = [
-    '/results',
-    '/feed',
-    '/@', // channel profile
-    '/channel',
-    '/playlist',
-]
-let scrollCtl = 'short'
-let allowScrolling = () => false
 
 function handleNavigate(event) {
     if (event.hashChange || event.downloadRequest !== null) {
         return
     }
+    lastScrollY = 0
     const url = new URL(event.destination.url)
     setPlaybackRate(url)
-    lastScrollY = 0
-    for (const item of mustScroll) {
-        if (url.pathname.startsWith(item)) {
-            setScrolling('allow')
-            return
-        }
-    }
-    setScrolling(scrollCtl)
+    setScrolling(url.pathname)
 }
 
 // SPA location change detection easy solution
 if (HAS_NAVIGATION) {
-    allowScrolling = (pathname) => {
-        const path = pathname ?? window.location.pathname
-        for (const item of mustScroll) {
-            if (path.startsWith(item)) {
-                return true
-            }
-        }
-        return false
-    }
     navigation.addEventListener('navigate', handleNavigate)
 }
 
@@ -268,15 +241,15 @@ function blockScreen() {
         document.querySelector('#shorts-player')?.click()
     }
 
-    setScrolling('none')
+    setScrolling(null, 'none')
     addStyle('page-blur', 'ytd-app { filter: blur(5px); }')
     document.body.appendChild(mask)
 }
 
 function unblockScreen() {
+    setScrolling()
     removeStyle('page-mask')
     removeStyle('page-blur')
-    setScrolling(allowScrolling() ? 'allow' : scrollCtl)
 }
 
 // millisec
@@ -371,13 +344,13 @@ browser.storage.sync.get().then(data => {
 
     if (data.playbackRate) {
         playbackCtl.rate = data.playbackRate
-        setPlaybackRate()
+        setPlaybackRate(window.location)
     }
 
-    scrollCtl = data.scrolling ?? scrollCtl
-    if (!allowScrolling()) {
-        setScrolling(scrollCtl)
+    if (typeof data.scrolling === 'object') {
+        Object.assign(scrollConfig, data.scrolling)
     }
+    setScrolling()
 
     if (data.timeLimit) {
         timeLimit.init = true
@@ -399,12 +372,12 @@ browser.storage.sync.onChanged.addListener(changes => {
 
     if (changes.playbackRate) {
         playbackCtl.rate = changes.playbackRate.newValue
-        setPlaybackRate()
+        setPlaybackRate(window.location)
     }
 
-    scrollCtl = changes?.scrolling?.newValue ?? scrollCtl
-    if (!allowScrolling() && 'scrolling' in changes) {
-        setScrolling(scrollCtl)
+    if (changes.scrolling) {
+        Object.assign(scrollConfig, changes.scrolling.newValue)
+        setScrolling()
     }
 
     if (changes.timeLimit) {

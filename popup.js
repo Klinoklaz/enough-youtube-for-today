@@ -1,13 +1,13 @@
 /// <reference path="shared.js" />
 
-if (HAS_VIS_CHANGE) {
+if (!HAS_VIS_CHANGE) {
     document.querySelectorAll('.require-vis').forEach(item => {
-        item.style.display = 'block'
+        item.style.display = 'none'
     })
 }
-if (HAS_NAVIGATION) {
+if (!HAS_NAVIGATION) {
     document.querySelectorAll('.require-nav').forEach(item => {
-        item.style.display = 'block'
+        item.style.display = 'none'
     })
 }
 
@@ -15,6 +15,7 @@ function setCheckbox(id, values) {
     document.querySelector('#' + id).checked = values[id] ?? true
 }
 
+const scrollPage = document.querySelector('#scroll-page')
 const dailyLimit = document.querySelector('#daily-limit')
 const weeklyLimit = document.querySelector('#weekly-limit')
 const playback = document.querySelector('#playback-rate')
@@ -28,7 +29,11 @@ browser.storage.sync.get().then(res => {
     for (const item in hideableParts) {
         setCheckbox(item, res)
     }
-    setCheckbox('scroll-' + (res.scrolling ?? 'short'), res)
+    if (res.scrolling) {
+        Object.assign(scrollConfig, res.scrolling)
+    }
+    scrollPage.value = 'home'
+    setCheckbox('scroll-' + scrollConfig.home, {})
     playback.value = res?.playbackRate ?? 1
     // millisec to min
     dailyLimit.value = (res?.timeLimit?.daily ?? 0) / 1000 / 60
@@ -75,6 +80,9 @@ playback.addEventListener('change', e => {
     playbackLabel.innerText = playback.value + 'x'
     browser.storage.sync.set({ playbackRate: e.target.value })
 })
+scrollPage.addEventListener('change', e => {
+    setCheckbox('scroll-' + scrollConfig[e.target.value], {})
+})
 
 document.querySelectorAll('#blocking input').forEach(item => {
     item.addEventListener('change', e => {
@@ -85,6 +93,7 @@ document.querySelectorAll('#blocking input').forEach(item => {
 })
 document.querySelectorAll('input[name="scrolling"]').forEach(item => {
     item.addEventListener('change', e => {
-        browser.storage.sync.set({ scrolling: e.target.value })
+        scrollConfig[scrollPage.value] = e.target.value
+        browser.storage.sync.set({ scrolling: scrollConfig })
     })
 })
