@@ -15,7 +15,17 @@ function setCheckbox(id, values) {
     document.querySelector('#' + id).checked = values[id] ?? true
 }
 
-const scrollPage = document.querySelector('#scroll-page')
+async function getURL() {
+    const tabs = await browser.tabs
+        .query({ active: true, currentWindow: true })
+    if (tabs?.length <= 0) {
+        return null
+    }
+    const url = tabs[0].url
+    return url ? new URL(url) : null
+}
+
+const scrollScope = document.querySelector('#scroll-scope')
 const dailyLimit = document.querySelector('#daily-limit')
 const weeklyLimit = document.querySelector('#weekly-limit')
 const playback = document.querySelector('#playback-rate')
@@ -24,16 +34,25 @@ const weeklyLimitLabel = document.querySelector('#weekly-limit-label')
 const playbackLabel = document.querySelector('#playback-rate + label')
 
 // init
-browser.storage.sync.get().then(res => {
+browser.storage.sync.get().then(async (res) => {
     res = res ?? {}
     for (const item in hideableParts) {
         setCheckbox(item, res)
     }
-    if (res.scrolling) {
-        Object.assign(scrollConfig, res.scrolling)
+    if (res.scrollConfig) {
+        Object.assign(scrollConfig, res.scrollConfig)
     }
-    scrollPage.value = 'home'
-    setCheckbox('scroll-' + scrollConfig.home, {})
+    // scrolling config of current page
+    const path = (await getURL())?.pathname
+    const value = scrollConfig.special[path]
+    if (path && value) {
+        scrollScope.value = 'special'
+        setCheckbox('scroll-' + value, {})
+    } else {
+        scrollScope.value = 'default'
+        setCheckbox('scroll-' + scrollConfig.default, {})
+    }
+
     playback.value = res?.playbackRate ?? 1
     // millisec to min
     dailyLimit.value = (res?.timeLimit?.daily ?? 0) / 1000 / 60
@@ -80,8 +99,15 @@ playback.addEventListener('change', e => {
     playbackLabel.innerText = playback.value + 'x'
     browser.storage.sync.set({ playbackRate: e.target.value })
 })
-scrollPage.addEventListener('change', e => {
-    setCheckbox('scroll-' + scrollConfig[e.target.value], {})
+
+scrollScope.addEventListener('change', async (e) => {
+    if (e.target.value === 'default') {
+        setCheckbox('scroll-' + scrollConfig.default, {})
+    } else {
+        const path = (await getURL())?.pathname
+        const value = scrollConfig.special[path] ?? scrollConfig.default
+        setCheckbox('scroll-' + value, {})
+    }
 })
 
 document.querySelectorAll('#blocking input').forEach(item => {
@@ -91,9 +117,26 @@ document.querySelectorAll('#blocking input').forEach(item => {
         browser.storage.sync.set(val)
     })
 })
+
 document.querySelectorAll('input[name="scrolling"]').forEach(item => {
-    item.addEventListener('change', e => {
-        scrollConfig[scrollPage.value] = e.target.value
-        browser.storage.sync.set({ scrolling: scrollConfig })
+    item.addEventListener('change', async (e) => {
+        if (!e.target.checked) {
+            return
+        }
+        const value = e.target.value
+        if (scrollScope.value === 'default') {
+            scrollConfig.default = value
+        } else {
+            const path = (await getURL())?.pathname
+            if (!path) { // not in ytb
+                return
+            }
+            if (scrollConfig.default === value) {
+                delete scrollConfig.special[path]
+            } else {
+                scrollConfig.special[path] = value
+            }
+        }
+        browser.storage.sync.set({ scrollConfig })
     })
 })

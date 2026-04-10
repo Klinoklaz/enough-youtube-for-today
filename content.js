@@ -183,12 +183,8 @@ function setScrolling(path, override) {
     let name
     if (override) {
         name = override
-    } else if (path === '' || path === '/') {
-        name = scrollConfig.home
-    } else if (path.startsWith('/watch')) {
-        name = scrollConfig.watch
-    } else if (path.startsWith('/feed/history')) {
-        name = scrollConfig.history
+    } else {
+        name = scrollConfig.special[path] ?? scrollConfig.default
     }
 
     for (const item in scrollEnum) {
@@ -347,8 +343,8 @@ browser.storage.sync.get().then(data => {
         setPlaybackRate(window.location)
     }
 
-    if (typeof data.scrolling === 'object') {
-        Object.assign(scrollConfig, data.scrolling)
+    if (data.scrollConfig) {
+        Object.assign(scrollConfig, data.scrollConfig)
     }
     setScrolling()
 
@@ -375,8 +371,8 @@ browser.storage.sync.onChanged.addListener(changes => {
         setPlaybackRate(window.location)
     }
 
-    if (changes.scrolling) {
-        Object.assign(scrollConfig, changes.scrolling.newValue)
+    if (changes.scrollConfig) {
+        Object.assign(scrollConfig, changes.scrollConfig.newValue)
         setScrolling()
     }
 

@@ -36,9 +36,8 @@ function updateTimeStat(start, end) {
 }
 
 const scrollConfig = {
-    home: 'short',
-    watch: 'short',
-    history: 'short',
+    default: 'short',
+    special: {}, // for specific pages
 }
 
 const hideableParts = {
