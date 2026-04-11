@@ -39,19 +39,15 @@ browser.storage.sync.get().then(async (res) => {
     for (const item in hideableParts) {
         setCheckbox(item, res)
     }
-    if (res.scrollConfig) {
-        Object.assign(scrollConfig, res.scrollConfig)
+    if (typeof res.scrolling === 'object') {
+        Object.assign(scrollConfig, res.scrolling)
     }
     // scrolling config of current page
     const path = (await getURL())?.pathname
-    const value = scrollConfig.special[path]
-    if (path && value) {
-        scrollScope.value = 'special'
-        setCheckbox('scroll-' + value, {})
-    } else {
-        scrollScope.value = 'default'
-        setCheckbox('scroll-' + scrollConfig.default, {})
-    }
+    let scroll = scrollConfig.special[path]
+    scrollScope.value = path ? 'special' : 'default'
+    scroll = path && scroll ? scroll : scrollConfig.default
+    setCheckbox('scroll-' + scroll, {})
 
     playback.value = res?.playbackRate ?? 1
     // millisec to min
@@ -110,6 +106,29 @@ scrollScope.addEventListener('change', async (e) => {
     }
 })
 
+document.querySelectorAll('#main-menu p').forEach(p => {
+    p.addEventListener('click', async (e) => {
+        const targetId = e.target.closest('p').id.slice(5)
+        document.querySelector('#main-menu')
+            .setAttribute('class', 'hide')
+        document.querySelector('#' + targetId)
+            .setAttribute('class', 'show content')
+        if (targetId === 'scroll') {
+            const specOption = document.querySelector('#current-path')
+            specOption.innerText = (await getURL())?.pathname ?? 'N/A'
+        }
+    })
+})
+
+document.querySelectorAll('p.title').forEach(p => {
+    p.addEventListener('click', e => {
+        e.target.closest('p').parentElement
+            .setAttribute('class', 'hide')
+        document.querySelector('#main-menu')
+            .setAttribute('class', 'show')
+    })
+})
+
 document.querySelectorAll('#blocking input').forEach(item => {
     item.addEventListener('change', e => {
         let val = {}
@@ -137,6 +156,6 @@ document.querySelectorAll('input[name="scrolling"]').forEach(item => {
                 scrollConfig.special[path] = value
             }
         }
-        browser.storage.sync.set({ scrollConfig })
+        browser.storage.sync.set({ scrolling: scrollConfig })
     })
 })

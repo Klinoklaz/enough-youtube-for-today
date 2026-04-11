@@ -343,8 +343,8 @@ browser.storage.sync.get().then(data => {
         setPlaybackRate(window.location)
     }
 
-    if (data.scrollConfig) {
-        Object.assign(scrollConfig, data.scrollConfig)
+    if (typeof data.scrolling === 'object') {
+        Object.assign(scrollConfig, data.scrolling)
     }
     setScrolling()
 
@@ -371,8 +371,8 @@ browser.storage.sync.onChanged.addListener(changes => {
         setPlaybackRate(window.location)
     }
 
-    if (changes.scrollConfig) {
-        Object.assign(scrollConfig, changes.scrollConfig.newValue)
+    if (changes.scrolling) {
+        Object.assign(scrollConfig, changes.scrolling.newValue)
         setScrolling()
     }
 

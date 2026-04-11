@@ -14,17 +14,42 @@
         margin: 0.5em 0;
       }
       body {
-        max-width: 420px;
+        padding: 0 1em;
+        overflow-x: hidden;
+        width: 18em;
         background: #e0e0db;
+        > .content {
+          padding-bottom: 1em;
+        }
       }
-      input[type="range"] {
-        width: 70%;
-      }
-      .mr05 {
+      #scroll label {
         margin-right: 0.5em;
+      }
+      #blocking label, #scroll label {
+        display: block;
+        line-height: 2em;
       }
       .range-label {
         vertical-align: top;
+      }
+      .hide {
+        height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transition: opacity 0.3s ease-in;
+      }
+      .show {
+        opacity: 1;
+        transition: opacity 0.3s ease-in;
+      }
+      .menu {
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+      }
+      .title {
+        padding-bottom: 1em;
+        border-bottom: solid 1px gray;
       }
       @media (prefers-color-scheme: dark) {
         body {
@@ -32,17 +57,18 @@
           background-color: rgb(41, 41, 41);
         }
       }
-      #blocking {
-        display: grid;
-        gap: 0.4em 0;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
     </style>
   </head>
 
   <body>
-    <fieldset id="blocking">
-      <legend>Blocking</legend>
+    <div id="main-menu" class="show">
+      <p id="menu-blocking" class="menu"><span>Blocked Parts</span><span>></span></p>
+      <p id="menu-scroll" class="menu"><span>Scrolling</span><span>></span></p>
+      <p id="menu-usage" class="menu require-vis"><span>Usage Limit</span><span>></span></p>
+      <p id="menu-speed" class="menu require-nav"><span>Default Speed</span><span>></span></p>
+    </div>
+    <div id="blocking" class="hide">
+      <p class="menu title"><span>&lt;</span><span>Blocked Parts</span></p>
       <label><input type="checkbox" id="shorts">Shorts on homepage</label>
       <label><input type="checkbox" id="relatedShorts">Shorts in suggestion</label>
       <label><input type="checkbox" id="nextShorts">Scrolling in shorts</label>
@@ -50,33 +76,22 @@
       <label><input type="checkbox" id="related">Suggestion</label>
       <label><input type="checkbox" id="watchNext">Watch next</label>
       <label><input type="checkbox" id="comments">Comment section</label>
-    </fieldset>
-
-    <fieldset>
-      <legend>Screen Scrolling</legend>
-      <label for="scroll-none" class="mr05">
-        <input type="radio" id="scroll-none" name="scrolling" value="none">None
-      </label>
-      <label for="scroll-short" class="mr05">
-        <input type="radio" id="scroll-short" name="scrolling" value="short">Short
-      </label>
-      <label for="scroll-long" class="mr05">
-        <input type="radio" id="scroll-long" name="scrolling" value="long">Long
-      </label>
-      <label for="scroll-allow" class="mr05">
-        <input type="radio" id="scroll-allow" name="scrolling" value="allow">Allow
-      </label>
-      <p class="note">
-        <label for="scroll-scope" class="require-nav mr05">* Effective on</label>
-        <select id="scroll-scope" class="require-nav">
-          <option value="special">current page type</option>
-          <option value="default">entire ytb site</option>
+    </div>
+    <div id="scroll" class="hide">
+      <p class="menu title"><span>&lt;</span><span>Scrolling</span></p>
+      <label><input type="radio" id="scroll-none" name="scrolling" value="none">None</label>
+      <label><input type="radio" id="scroll-short" name="scrolling" value="short">Short</label>
+      <label><input type="radio" id="scroll-long" name="scrolling" value="long">Long</label>
+      <label><input type="radio" id="scroll-allow" name="scrolling" value="allow">Allow</label>
+      <p class="note require-nav">* Effective on&nbsp;
+        <select id="scroll-scope">
+          <option value="special" id="current-path">N/A</option>
+          <option value="default">entire YouTube site</option>
         </select>
       </p>
-    </fieldset>
-
-    <fieldset class="require-vis">
-      <legend>Usage Limit</legend>
+    </div>
+    <div id="usage" class="hide">
+      <p class="menu title"><span>&lt;</span><span>Usage Limit</span></p>
       <input type="range" id="daily-limit" min="0" max="180" step="1">
       <label for="daily-limit" class="range-label">
         Daily <span class="note" id="daily-limit-label"></span>
@@ -89,18 +104,15 @@
       <p class="note">
         * You can switch to a non-YouTube tab or minimize the browser to pause timing.
       </p>
-    </fieldset>
-
-    <fieldset class="require-nav">
-      <legend>Default Speed</legend>
+    </div>
+    <div id="speed" class="hide">
+      <p class="menu title"><span>&lt;</span><span>Default Speed</span></p>
       <input type="range" id="playback-rate" min="0.25" max="2" step="0.25">
       <label for="playback-rate" class="range-label">1x</label>
       <p class="note">
         * It'll try to avoid altering playback speed of music videos.
       </p>
-    </fieldset>
-
-    <script src="shared.js" defer></script>
-    <script src="popup.js" defer></script>
+    </div>
+    <script src="shared.js" defer></script><script src="popup.js" defer></script>
   </body>
 </html>
