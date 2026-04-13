@@ -54,13 +54,28 @@ function editTimeLimit(id, value) {
     browser.storage.sync.set({ timeLimit })
 }
 
+// create time select forms
+const timeGroupPrototype = document.querySelector('.time-picker-group')
+const timeGroups = [timeGroupPrototype]
+const week = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
+for (const i in week) {
+    const group = timeGroupPrototype.cloneNode(true)
+    const label = group.querySelector('label')
+    label.innerText = week[i]
+    label.setAttribute('for', `s-${i}-0`)
+    group.querySelectorAll('.time-picker-wrap').forEach(wrap => {
+        wrap.id = wrap.id.replace('-x-', `-${i}-`)
+    })
+    timeGroups.push(group)
+    document.querySelector('#usage').appendChild(group)
+}
+
 const timePickers = document.querySelectorAll('.time-picker-wrap')
-const timeGroups = document.querySelectorAll('.time-picker-group')
 const scrollScope = document.querySelector('#scroll-scope')
 const playback = document.querySelector('#playback-rate')
 const playbackLabel = document.querySelector('#playback-rate + label')
 
-// init
+// init form values
 browser.storage.sync.get().then(async (res) => {
     res = res ?? {}
     for (const item in hideableParts) {
@@ -152,7 +167,7 @@ timePickers.forEach(wrapper => {
             nonZeroMin.push(minute)
         }
         minute.innerText = m.toString().padStart(2, '0')
-        // select minute
+        // pick a minute
         minute.addEventListener('click', () => {
             const prefix = input.value
                 ? input.value.slice(0, 3) : '00:'
@@ -166,7 +181,7 @@ timePickers.forEach(wrapper => {
         const hour = document.createElement('li')
         hourPicker.appendChild(hour)
         hour.innerText = h.toString().padStart(2, '0')
-        // select hour
+        // pick an hour
         hour.addEventListener('click', () => {
             const suffix = input.value && h !== 24
                 ? input.value.slice(2) : ':00'
