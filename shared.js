@@ -1,38 +1,21 @@
-function dayAndWeekStart() {
-    const date = new Date
-    const dayStart = date.setHours(0, 0, 0, 0)
-    const weekStart = date.setDate(
-        date.getDate() - date.getDay())
-    return { dayStart, weekStart }
-}
+// 0 ~ 6 => SUN ~ SAT
+const timeLimit = [
+    [['00:00', '24:00']],
+    [['00:00', '24:00']],
+    [['00:00', '24:00']],
+    [['00:00', '24:00']],
+    [['00:00', '24:00']],
+    [['00:00', '24:00']],
+    [['00:00', '24:00']],
+]
 
-// page stay time, millisec
-const timeStat = {
-    inTheDay: 0,
-    inTheWeek: 0,
-    init: false
-}
-Object.assign(timeStat, dayAndWeekStart())
-
-function updateTimeStat(start, end) {
-    const info = dayAndWeekStart()
-
-    // if crossed date or week
-    if (timeStat.dayStart < info.dayStart) {
-        timeStat.inTheDay = 0
+function setTimeLimit(value) {
+    if (!value) {
+        return
     }
-    if (timeStat.weekStart < info.weekStart) {
-        timeStat.inTheWeek = 0
+    for (const i in timeLimit) {
+        timeLimit[i] = value[i] ?? timeLimit[i]
     }
-
-    Object.assign(timeStat, info)
-    const duration = end - start
-    timeStat.inTheDay += start < info.dayStart
-        ? end - info.dayStart
-        : duration
-    timeStat.inTheWeek += start < info.weekStart
-        ? end - info.weekStart
-        : duration
 }
 
 const scrollConfig = {
@@ -58,5 +41,4 @@ const hideableParts = {
 }
 
 // feature detection
-const HAS_VIS_CHANGE = 'onvisibilitychange' in document
 const HAS_NAVIGATION = navigation && 'onnavigate' in navigation

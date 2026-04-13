@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Enough YouTube for Today",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Anti-addition extension for YouTube.",
   "icons": {
     "48": "icon.svg"
@@ -21,9 +21,6 @@
       "js": ["shared.js", "content.js"]
     }
   ],
-  "background": {
-    "scripts": ["shared.js", "background.js"]
-  },
   "action": {
     "default_title": "Enough YouTube for Today",
 		"default_icon": "icon.svg",

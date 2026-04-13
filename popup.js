@@ -1,10 +1,5 @@
 /// <reference path="shared.js" />
 
-if (!HAS_VIS_CHANGE) {
-    document.querySelectorAll('.require-vis').forEach(item => {
-        item.style.display = 'none'
-    })
-}
 if (!HAS_NAVIGATION) {
     document.querySelectorAll('.require-nav').forEach(item => {
         item.style.display = 'none'
@@ -25,12 +20,44 @@ async function getURL() {
     return url ? new URL(url) : null
 }
 
+function timeLimitIndex(id) {
+    const info = id.split('-')
+    const i = +info[1]
+    const j = +info[2]
+    const k = info[0] === 's' ? 0 : 1
+    return [i, j, k]
+}
+
+function findTimeLimit(id) {
+    const [i, j, k] = timeLimitIndex(id)
+    return timeLimit[i] && timeLimit[i][j] && timeLimit[i][j][k]
+        ? timeLimit[i][j][k] : ''
+}
+
+function editTimeLimit(id, value) {
+    const reg = /^(?:(?:[0-1][0-9]|2[0-3]):[0-5][0-9]|24:00)$/
+    value = value?.trim() ?? ''
+    if (value && !reg.test(value)) {
+        return
+    }
+    const [ii, j, k] = timeLimitIndex(id)
+    const all = Number.isNaN(ii) // -x-
+    let i = all ? 6 : ii
+    if (i > 6 || j > 2 || k > 1 || i < 0 || j < 0 || k < 0) {
+        return
+    }
+    for (; i >= 0; i -= all ? 1 : 7) {
+        timeLimit[i] = timeLimit[i] ?? []
+        timeLimit[i][j] = timeLimit[i][j] ?? []
+        timeLimit[i][j][k] = value
+    }
+    browser.storage.sync.set({ timeLimit })
+}
+
+const timePickers = document.querySelectorAll('.time-picker-wrap')
+const timeGroups = document.querySelectorAll('.time-picker-group')
 const scrollScope = document.querySelector('#scroll-scope')
-const dailyLimit = document.querySelector('#daily-limit')
-const weeklyLimit = document.querySelector('#weekly-limit')
 const playback = document.querySelector('#playback-rate')
-const dailyLimitLabel = document.querySelector('#daily-limit-label')
-const weeklyLimitLabel = document.querySelector('#weekly-limit-label')
 const playbackLabel = document.querySelector('#playback-rate + label')
 
 // init
@@ -49,14 +76,13 @@ browser.storage.sync.get().then(async (res) => {
     scroll = path && scroll ? scroll : scrollConfig.default
     setCheckbox('scroll-' + scroll, {})
 
-    playback.value = res?.playbackRate ?? 1
-    // millisec to min
-    dailyLimit.value = (res?.timeLimit?.daily ?? 0) / 1000 / 60
-    weeklyLimit.value = (res?.timeLimit?.weekly ?? 0) / 1000 / 60
-    // label text
+    playback.value = res.playbackRate ?? 1
     playbackLabel.innerText = playback.value + 'x'
-    dailyLimitLabel.innerText = formatTime(dailyLimit.value)
-    weeklyLimitLabel.innerText = formatTime(weeklyLimit.value)
+
+    setTimeLimit(res.timeLimit)
+    for (const item of timePickers) {
+        item.querySelector('input').value = findTimeLimit(item.id)
+    }
 })
 
 function formatTime(minutes) {
@@ -72,23 +98,89 @@ function formatTime(minutes) {
     return '(' + Math.floor(minutes / 60) + 'h' + remainder
 }
 
-dailyLimit.addEventListener('change', e => {
-    browser.storage.sync.set({
-        timeLimit: {
-            daily: e.target.value * 1000 * 60, // min to millisec
-            weekly: weeklyLimit.value * 1000 * 60
+const timeInputs = new Map
+
+// edit 'ALL'
+function setTimeInputs(pattern, value) {
+    if (!pattern?.includes('-x-')) {
+        return
+    }
+    const reg = new RegExp(pattern.replace('-x-', '-\\d-'))
+    for (const [key, input] of timeInputs) {
+        if (reg.test(key)) {
+            input.value = value
         }
+    }
+}
+
+// create time select panels
+timePickers.forEach(wrapper => {
+    const minutePicker = document.createElement('ul')
+    const hourPicker = document.createElement('ul')
+    hourPicker.tabIndex = -1
+    minutePicker.tabIndex = -1
+
+    const picker = document.createElement('div')
+    picker.classList.add('time-picker', 'hide', 'toggle2')
+    picker.appendChild(hourPicker)
+    picker.appendChild(minutePicker)
+    // prevent input from losing focus
+    picker.addEventListener('mousedown', e => {
+        e.preventDefault()
     })
-    dailyLimitLabel.innerText = formatTime(e.target.value)
-})
-weeklyLimit.addEventListener('change', e => {
-    browser.storage.sync.set({
-        timeLimit: {
-            daily: dailyLimit.value * 1000 * 60,
-            weekly: e.target.value * 1000 * 60
+    wrapper.appendChild(picker)
+
+    const input = wrapper.querySelector('input')
+    input.addEventListener('blur', () => {
+        picker.classList.add('hide')
+    })
+    input.addEventListener('focus', () => {
+        picker.classList.remove('hide')
+    })
+    // won't work for js assignment
+    input.addEventListener('change', () => {
+        setTimeInputs(wrapper.id, input.value)
+        editTimeLimit(wrapper.id, input.value)
+    })
+    timeInputs.set(wrapper.id, input)
+
+    const nonZeroMin = []
+    for (let m = 0; m < 60; m++) {
+        const minute = document.createElement('li')
+        minutePicker.appendChild(minute)
+        if (m > 0) {
+            nonZeroMin.push(minute)
         }
-    })
-    weeklyLimitLabel.innerText = formatTime(e.target.value)
+        minute.innerText = m.toString().padStart(2, '0')
+        // select minute
+        minute.addEventListener('click', () => {
+            const prefix = input.value
+                ? input.value.slice(0, 3) : '00:'
+            input.value = prefix + minute.innerText
+            setTimeInputs(wrapper.id, input.value)
+            editTimeLimit(wrapper.id, input.value)
+        })
+    }
+
+    for (let h = 0; h < 25; h++) {
+        const hour = document.createElement('li')
+        hourPicker.appendChild(hour)
+        hour.innerText = h.toString().padStart(2, '0')
+        // select hour
+        hour.addEventListener('click', () => {
+            const suffix = input.value && h !== 24
+                ? input.value.slice(2) : ':00'
+            input.value = hour.innerText + suffix
+            setTimeInputs(wrapper.id, input.value)
+            editTimeLimit(wrapper.id, input.value)
+        })
+        // 24 can only have 24:00
+        hour.addEventListener('mouseenter', () => {
+            nonZeroMin.forEach(li => {
+                li.style.display = h === 24 ? 'none' : ''
+            })
+        })
+    }
 })
 
 playback.addEventListener('change', e => {
@@ -106,26 +198,51 @@ scrollScope.addEventListener('change', async (e) => {
     }
 })
 
+// goto main menu
+document.querySelectorAll('p.title').forEach(p => {
+    p.addEventListener('click', e => {
+        e.target.closest('p').parentElement.classList.add('hide')
+        document.querySelector('#main-menu').classList.remove('hide')
+    })
+})
+// click menu
 document.querySelectorAll('#main-menu p').forEach(p => {
     p.addEventListener('click', async (e) => {
         const targetId = e.target.closest('p').id.slice(5)
-        document.querySelector('#main-menu')
-            .setAttribute('class', 'hide')
-        document.querySelector('#' + targetId)
-            .setAttribute('class', 'show content')
         if (targetId === 'scroll') {
             const specOption = document.querySelector('#current-path')
             specOption.innerText = (await getURL())?.pathname ?? 'N/A'
         }
+        document.querySelector('#main-menu').classList.add('hide')
+        document.querySelector('#' + targetId).classList.remove('hide')
     })
 })
 
-document.querySelectorAll('p.title').forEach(p => {
-    p.addEventListener('click', e => {
-        e.target.closest('p').parentElement
-            .setAttribute('class', 'hide')
-        document.querySelector('#main-menu')
-            .setAttribute('class', 'show')
+// toggle time picker group
+document.querySelectorAll('.time-picker-expand').forEach(item => {
+    item.addEventListener('click', e => {
+        const expandable = e.target.closest('.time-picker-group')
+            .querySelectorAll('.expandable')
+        if (e.target.classList.contains('expanded')) {
+            e.target.classList.remove('expanded')
+            e.target.style.rotate = ''
+            expandable.forEach(div => { div.classList.add('hide') })
+        } else {
+            e.target.classList.add('expanded')
+            e.target.style.rotate = '-180deg'
+            expandable.forEach(div => { div.classList.remove('hide') })
+        }
+        // text reflow cope
+        let offset = 0
+        timeGroups.forEach(item => {
+            item.style.transform = offset
+                ? `translateY(calc(${offset} * var(--input-height)))`
+                : ''
+            const toggler = item.querySelector('.time-picker-expand')
+            if (toggler?.classList.contains('expanded')) {
+                offset += 2
+            }
+        })
     })
 })
 

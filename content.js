@@ -210,8 +210,16 @@ if (HAS_NAVIGATION) {
     navigation.addEventListener('navigate', handleNavigate)
 }
 
+const screenState = {
+    blocked: false,
+    nextCheck: null,
+}
+
 // blur entire screen and display reminder message
-function blockScreen() {
+function blockScreen(message) {
+    if (screenState.blocked) {
+        return
+    }
     const mask = document.createElement('div')
     const style = {
         zIndex: '9999',
@@ -227,7 +235,7 @@ function blockScreen() {
         background: 'rgba(0, 0, 0, 0.5)'
     }
     Object.assign(mask.style, style)
-    mask.innerText = 'Hey, Time to Rest!'
+    mask.innerText = message
     mask.setAttribute('class', 'eytft-page-mask')
 
     // pause video (if any)
@@ -237,96 +245,67 @@ function blockScreen() {
         document.querySelector('#shorts-player')?.click()
     }
 
+    screenState.blocked = true
+    screenState.nextCheck = null
     setScrolling(null, 'none')
     addStyle('page-blur', 'ytd-app { filter: blur(5px); }')
     document.body.appendChild(mask)
 }
 
 function unblockScreen() {
+    if (!screenState.blocked) {
+        return
+    }
     setScrolling()
     removeStyle('page-mask')
     removeStyle('page-blur')
+    screenState.blocked = false
+    screenState.nextCheck = null
 }
 
-// millisec
-const timeLimit = {
-    daily: 0,
-    weekly: 0,
-    init: false
-}
-
-function calcRemainingTime() {
-    let res = null
-    let minLimit
-    if (timeLimit.daily) {
-        minLimit = timeLimit.daily
-        res = timeLimit.daily - timeStat.inTheDay
-    }
-    if (timeLimit.weekly) {
-        const limit = timeLimit.weekly
-        const res2 = limit - timeStat.inTheWeek
-        res = Math.min(res ?? res2, res2)
-        minLimit = Math.min(minLimit ?? limit, limit)
-    }
-    if (!res) {
-        return res
-    }
+function checkTimeLimit() {
     const now = new Date
-    const end = new Date(now.getTime() + res)
-    // is tomorrow
-    if (end.getDate() > now.getDate()) {
-        res = end.setHours(0, 0, 0, 0) - now + minLimit
-    }
-    return res
-}
+    const time = now.toLocaleTimeString('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit'
+    })
 
-// pause and start should be idempotent
-const timer = {
-    id: null,
-    start: null,
-    end: null,
-    triggered: false
-}
-
-function startTimer(millisec) {
-    if (timer.id) { // restart
-        pauseTimer()
-    }
-    if (timer.triggered) {
-        if ((millisec ?? 1) <= 0) {
-            return
-        } else {
-            unblockScreen()
-            timer.triggered = false
+    const ytbEnd = new Date
+    let nextYtbTime = 'z'
+    let isYtbTime = false
+    for (const p of timeLimit[now.getDay()]) {
+        if (p?.length !== 2 || !p[0] || !p[1] || p[0] >= p[1]) {
+            continue
+        }
+        if (p[0] > time && p[0] < nextYtbTime) {
+            nextYtbTime = p[0]
+        }
+        if (time >= p[0] && time < p[1]) {
+            isYtbTime = true
+            ytbEnd.setHours(...p[1].split(':'), 0, 0)
         }
     }
-    if (millisec === null) {
-        return
-    }
-    timer.start = Date.now()
-    timer.end = null
-    timer.id = setTimeout(() => {
-        timer.id = null
-        blockScreen()
-        pauseTimer() // this updates timeStat
-        timer.triggered = true
-    }, millisec)
-}
 
-function pauseTimer() {
-    if (timer.id) {
-        clearTimeout(timer.id)
-        timer.id = null
+    if (isYtbTime) {
+        if (screenState.nextCheck) {
+            clearTimeout(screenState.nextCheck)
+        }
+        unblockScreen()
+        screenState.nextCheck = setTimeout(checkTimeLimit, ytbEnd - now)
+    } else {
+        if (screenState.nextCheck) {
+            clearTimeout(screenState.nextCheck)
+        }
+        if (nextYtbTime === 'z') {
+            nextYtbTime = '24:00'
+            blockScreen('Off Time. Come Another Day.')
+        } else {
+            blockScreen(`Off Time. Come at ${nextYtbTime}`)
+        }
+        const ytbStart = new Date
+        ytbStart.setHours(...nextYtbTime.split(':'), 0, 0)
+        screenState.nextCheck = setTimeout(checkTimeLimit, ytbStart - now)
     }
-    if (!timer.start) {
-        return
-    }
-    timer.end = Date.now()
-    // avoid updating storage directly
-    // to mitigate race condition
-    browser.runtime.sendMessage({ timer })
-    updateTimeStat(timer.start, timer.end)
-    timer.start = timer.end = null
 }
 
 browser.storage.sync.get().then(data => {
@@ -338,20 +317,19 @@ browser.storage.sync.get().then(data => {
         }
     }
 
+    data = data ?? {}
+    setTimeLimit(data.timeLimit)
+    checkTimeLimit()
+
     if (data.playbackRate) {
         playbackCtl.rate = data.playbackRate
         setPlaybackRate(window.location)
     }
 
-    if (typeof data.scrolling === 'object') {
+    if (data.scrolling) {
         Object.assign(scrollConfig, data.scrolling)
     }
     setScrolling()
-
-    if (data.timeLimit) {
-        timeLimit.init = true
-        Object.assign(timeLimit, data.timeLimit)
-    }
 })
 
 browser.storage.sync.onChanged.addListener(changes => {
@@ -366,6 +344,11 @@ browser.storage.sync.onChanged.addListener(changes => {
         }
     }
 
+    if (changes.timeLimit) {
+        setTimeLimit(changes.timeLimit.newValue)
+        checkTimeLimit()
+    }
+
     if (changes.playbackRate) {
         playbackCtl.rate = changes.playbackRate.newValue
         setPlaybackRate(window.location)
@@ -375,51 +358,4 @@ browser.storage.sync.onChanged.addListener(changes => {
         Object.assign(scrollConfig, changes.scrolling.newValue)
         setScrolling()
     }
-
-    if (changes.timeLimit) {
-        Object.assign(timeLimit, changes.timeLimit.newValue)
-        startTimer(calcRemainingTime())
-    }
 })
-
-// avoid storage.sync to mitigate race condition
-browser.storage.local.get().then(data => {
-    timeStat.init = true
-    if (!data.timeStat) {
-        return
-    }
-    if (data.timeStat.dayStart === timeStat.dayStart) {
-        timeStat.inTheDay = data.timeStat.inTheDay
-    }
-    if (data.timeStat.weekStart === timeStat.weekStart) {
-        timeStat.inTheWeek = data.timeStat.inTheWeek
-    }
-})
-
-browser.storage.local.onChanged.addListener(changes => {
-    if (changes.timeStat) {
-        Object.assign(timeStat, changes.timeStat.newValue)
-    }
-})
-
-// track stay time
-function handleVisChange() {
-    if (document.visibilityState === 'hidden') {
-        pauseTimer()
-    } else {
-        startTimer(calcRemainingTime())
-    }
-}
-
-if (HAS_VIS_CHANGE) {
-    if (document.visibilityState === 'visible') {
-        if (timeLimit.init && timeStat.init) {
-            startTimer(calcRemainingTime())
-        } else {
-            setTimeout(() => {
-                startTimer(calcRemainingTime())
-            }, 1000)
-        }
-    }
-    document.addEventListener('visibilitychange', handleVisChange)
-}
