@@ -15,9 +15,10 @@
       }
       body {
         padding: 0 1em;
-        overflow-x: hidden;
         width: 18em;
+        overflow-x: hidden;
         background: #e0e0db;
+        font-family: sans-serif;
         > .content {
           padding-bottom: 1em;
         }
@@ -89,6 +90,22 @@
         width: 5em;
         border-radius: 4px;
         pointer-events: auto;
+      }
+      input.time:placeholder-shown {
+        + .clear-button {
+          opacity: 0;
+        }
+      }
+      .clear-button {
+        position: absolute;
+        right: 1em;
+        top: -1px;
+        color: lightgray;
+        cursor: pointer;
+        pointer-events: auto;
+      }
+      .clear-button:hover {
+        color: gray;
       }
       .time-picker {
         position: absolute;
@@ -162,16 +179,29 @@
       <div class="time-picker-group toggle2"><label for="s-x-0">ALL</label>
         <div>
           <div>
-            <div class="time-picker-wrap" id="s-x-0"><input class="time"></div> ~
-            <div class="time-picker-wrap" id="e-x-0"><input class="time"></div>
+            <div class="time-picker-wrap" id="s-x-0">
+              <input placeholder=" " class="time"><span class="clear-button">&#xD7;</span>
+              <!-- generated time picker panels here -->
+            </div> ~
+            <div class="time-picker-wrap" id="e-x-0">
+              <input placeholder=" " class="time"><span class="clear-button">&#xD7;</span>
+            </div>
             <span class="time-picker-expand toggle2">&#x2BC6;</span>
           </div>
           <div class="hide toggle2 expandable">
-            <div class="time-picker-wrap" id="s-x-1"><input class="time"></div> ~
-            <div class="time-picker-wrap" id="e-x-1"><input class="time"></div>
+            <div class="time-picker-wrap" id="s-x-1">
+              <input placeholder=" " class="time"><span class="clear-button">&#xD7;</span>
+            </div> ~
+            <div class="time-picker-wrap" id="e-x-1">
+              <input placeholder=" " class="time"><span class="clear-button">&#xD7;</span>
+            </div>
             <div></div>
-            <div class="time-picker-wrap" id="s-x-2"><input class="time"></div> ~
-            <div class="time-picker-wrap" id="e-x-2"><input class="time"></div>
+            <div class="time-picker-wrap" id="s-x-2">
+              <input placeholder=" " class="time"><span class="clear-button">&#xD7;</span>
+            </div> ~
+            <div class="time-picker-wrap" id="e-x-2">
+              <input placeholder=" " class="time"><span class="clear-button">&#xD7;</span>
+            </div>
           </div>
         </div>
       </div>

@@ -159,6 +159,13 @@ timePickers.forEach(wrapper => {
     })
     timeInputs.set(wrapper.id, input)
 
+    // clear input
+    const clear = wrapper.querySelector('.clear-button')
+    clear.addEventListener('click', () => {
+        input.value = ''
+        setTimeInputs(wrapper.id, '')
+    })
+
     const nonZeroMin = []
     for (let m = 0; m < 60; m++) {
         const minute = document.createElement('li')
