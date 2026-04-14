@@ -298,9 +298,9 @@ function checkTimeLimit() {
         }
         if (nextYtbTime === 'z') {
             nextYtbTime = '24:00'
-            blockScreen('Off Time. Come Another Day.')
+            blockScreen('Offline Time. Come Another Day.')
         } else {
-            blockScreen(`Off Time. Come at ${nextYtbTime}`)
+            blockScreen(`Offline Time. Come at ${nextYtbTime}.`)
         }
         const ytbStart = new Date
         ytbStart.setHours(...nextYtbTime.split(':'), 0, 0)

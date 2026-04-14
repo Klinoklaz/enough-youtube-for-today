@@ -55,11 +55,11 @@ function editTimeLimit(id, value) {
 }
 
 // create time select forms
-const timeGroupPrototype = document.querySelector('.time-picker-group')
-const timeGroups = [timeGroupPrototype]
+const timeGroupTmpl = document.querySelector('.time-picker-group')
+const timeGroups = [timeGroupTmpl]
 const week = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 for (const i in week) {
-    const group = timeGroupPrototype.cloneNode(true)
+    const group = timeGroupTmpl.cloneNode(true)
     const label = group.querySelector('label')
     label.innerText = week[i]
     label.setAttribute('for', `s-${i}-0`)
