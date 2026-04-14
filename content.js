@@ -273,10 +273,13 @@ function checkTimeLimit() {
     const ytbEnd = new Date
     let nextYtbTime = 'z'
     let isYtbTime = false
+    // valid entry must take the form of ["start", "end"]
+    let isValid = false
     for (const p of timeLimit[now.getDay()]) {
         if (p?.length !== 2 || !p[0] || !p[1] || p[0] >= p[1]) {
             continue
         }
+        isValid = true
         if (p[0] > time && p[0] < nextYtbTime) {
             nextYtbTime = p[0]
         }
@@ -286,6 +289,9 @@ function checkTimeLimit() {
         }
     }
 
+    if (!isValid) {
+        return
+    }
     if (isYtbTime) {
         if (screenState.nextCheck) {
             clearTimeout(screenState.nextCheck)

@@ -164,6 +164,7 @@ timePickers.forEach(wrapper => {
     clear.addEventListener('click', () => {
         input.value = ''
         setTimeInputs(wrapper.id, '')
+        editTimeLimit(wrapper.id, '')
     })
 
     const nonZeroMin = []
