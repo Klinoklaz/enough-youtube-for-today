@@ -256,6 +256,7 @@ document.querySelectorAll('.time-picker-expand').forEach(item => {
             expandable.forEach(div => { div.classList.remove('hide') })
         }
         // text reflow cope
+        let zIndex = timeGroups.length
         let offset = 0
         timeGroups.forEach(item => {
             item.style.transform = offset
@@ -265,6 +266,9 @@ document.querySelectorAll('.time-picker-expand').forEach(item => {
             if (toggler?.classList.contains('expanded')) {
                 offset += 2
             }
+            // transform causes z-index context change
+            // set this to avoid stacking issue of select panels
+            item.style.zIndex = zIndex--
         })
     })
 })
