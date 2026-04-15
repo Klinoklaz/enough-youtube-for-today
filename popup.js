@@ -1,9 +1,8 @@
 /// <reference path="shared.js" />
 
 if (!HAS_NAVIGATION) {
-    document.querySelectorAll('.require-nav').forEach(item => {
-        item.style.display = 'none'
-    })
+    document.querySelectorAll('.require-nav')
+        .forEach(item => { item.style.display = 'none' })
 }
 
 function setCheckbox(id, values) {
@@ -77,6 +76,15 @@ const playbackLabel = document.querySelector('#playback-rate + label')
 
 // init form values
 browser.storage.sync.get().then(async (res) => {
+    const url = await getURL()
+    if (navigator.userAgent.includes('Mobi')
+        || url?.hostname === MOBILE_DOMAIN) {
+        Object.assign(hideableParts, hideablePartsMobile)
+    } else {
+        document.querySelectorAll('.mobile-only')
+            .forEach(item => { item.style.display = 'none' })
+    }
+
     res = res ?? {}
     for (const item in hideableParts) {
         setCheckbox(item, res)
@@ -85,7 +93,7 @@ browser.storage.sync.get().then(async (res) => {
         Object.assign(scrollConfig, res.scrolling)
     }
     // scrolling config of current page
-    const path = (await getURL())?.pathname
+    const path = url?.pathname
     let scroll = scrollConfig.special[path]
     scrollScope.value = path ? 'special' : 'default'
     scroll = path && scroll ? scroll : scrollConfig.default

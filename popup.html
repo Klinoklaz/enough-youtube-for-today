@@ -155,11 +155,19 @@
       <p class="menu title"><span>&lt;</span><span>Blocked Parts</span></p>
       <label><input type="checkbox" id="shorts">Shorts on homepage</label>
       <label><input type="checkbox" id="relatedShorts">Shorts in suggestion</label>
-      <label><input type="checkbox" id="nextShorts">Scrolling in shorts</label>
+      <label><input type="checkbox" id="nextShorts">Scrolling in shorts
+        <span class="note mobile-only">*</span>
+      </label>
       <label><input type="checkbox" id="playables">YouTube playables</label>
       <label><input type="checkbox" id="related">Suggestion</label>
       <label><input type="checkbox" id="watchNext">Watch next</label>
       <label><input type="checkbox" id="comments">Comment section</label>
+      <label class="mobile-only">
+        <input type="checkbox" id="switchVideo">Next/previous button <span class="note">*</span>
+      </label>
+      <p class="note mobile-only">* 1. Not always work<br>
+        <span style="opacity: 0;">* </span>2. Right next to the play/pause button
+      </p>
     </div>
     <div id="scroll" class="hide content toggle">
       <p class="menu title"><span>&lt;</span><span>Scrolling</span></p>

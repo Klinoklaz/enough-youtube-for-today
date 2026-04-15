@@ -7,4 +7,4 @@ A firefox extension for countering YouTube addiction. Save your time by auto-spe
 * Set a default playback speed (theoretically won't affect music videos).
 * Set watch time for every week day, if it's not watch time the addon will cover the whole screen with a reminder message to force you quit.
 
-This extension currently only works on desktop firefox. Some features may not available if your firefox version is older then [147](https://www.firefox.com/en-US/firefox/147.0/releasenotes/).
+Some features may not available if your firefox version is older then [147](https://www.firefox.com/en-US/firefox/147.0/releasenotes/).

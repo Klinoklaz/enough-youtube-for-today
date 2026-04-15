@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Enough YouTube for Today",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Anti-addition extension for YouTube.",
   "icons": {
     "48": "icon.svg"
@@ -12,12 +12,16 @@
       "data_collection_permissions": {
         "required": ["none"]
       }
-    }
+    },
+    "gecko_android": {}
   },
   "permissions": ["storage"],
   "content_scripts": [
     {
-      "matches": ["*://www.youtube.com/*"],
+      "matches": [
+        "*://www.youtube.com/*",
+        "*://m.youtube.com/*"
+      ],
       "js": ["shared.js", "content.js"]
     }
   ],

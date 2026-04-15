@@ -1,5 +1,51 @@
 /// <reference path="shared.js" />
 
+const selectors = {
+    videoSetting: '.ytp-menuitem .ytp-menuitem-label',
+    speedSettingText: 'Playback speed',
+    app: 'ytd-app', // entire page
+    thumbnail: 'yt-thumbnail-view-model',
+}
+
+const selectorsMobile = {
+    videoSetting: 'player-settings-menu .ytListItemViewModelTitleWrapper',
+    speedSettingText: 'Speed',
+    app: 'ytm-app',
+    thumbnail: 'ytm-thumbnail-cover',
+}
+
+const scrollEnum = {
+    // disable scrolling entirely
+    none: `body {
+        overflow-y: hidden !important;
+    }`,
+    // 2.5 screens
+    short: `ytd-page-manager {
+        max-height: 250vh !important;
+        overflow-y: hidden !important;
+    }`,
+    // 5 screens
+    long: `ytd-page-manager, ytd-app {
+        max-height: 500vh !important;
+        overflow-y: hidden !important;
+    }`,
+}
+
+if (window.location.hostname === MOBILE_DOMAIN) {
+    Object.assign(scrollEnum, {
+        long: `ytm-app {
+            max-height: 500vh !important;
+            overflow-y: hidden !important;
+        }`,
+        short: `ytm-app {
+            max-height: 250vh !important;
+            overflow-y: hidden !important;
+        }`,
+    })
+    Object.assign(selectors, selectorsMobile)
+    Object.assign(hideableParts, hideablePartsMobile)
+}
+
 function addStyle(name, content) {
     const style = document.createElement('style')
     style.textContent = content
@@ -53,15 +99,13 @@ function playbackCtlExec() {
     }
     updateMVDB()
     // give up control if user choses manual setting
-    const menu = document.querySelectorAll(
-        '.ytp-menuitem .ytp-menuitem-label')
-    for (const item of menu) {
-        if (item.innerText === 'Playback speed') {
+    const menu = document.querySelectorAll(selectors.videoSetting)
+    menu.forEach(item => {
+        if (item.innerText === selectors.speedSettingText) {
             const speedMenu = item.parentElement
             speedMenu.addEventListener('click', handleSpeedMenuClick)
-            break
         }
-    }
+    })
 }
 
 function setPlaybackRate(url) {
@@ -148,7 +192,8 @@ function updateMVDB() {
     }
 
     // thumbnail with the music (& probably? other special) icon
-    const selector = 'a:has(yt-thumbnail-view-model .ytSpecIconShapeHost)'
+    const selector = `a:has(
+        ${selectors.thumbnail} .ytSpecIconShapeHost)`
     document.querySelectorAll(selector).forEach(item => {
         const match = item.getAttribute('href')?.match(v)
         if (!match || !match[1]) {
@@ -161,37 +206,17 @@ function updateMVDB() {
     document.addEventListener('scrollend', handleScrollPagination)
 }
 
-const scrollEnum = {
-    // disable scrolling entirely
-    none: `body {
-        overflow-y: hidden !important;
-    }`,
-    // 2.5 screens
-    short: `ytd-page-manager {
-        max-height: 250vh !important;
-        overflow-y: hidden !important;
-    }`,
-    // 5 screens
-    long: `ytd-page-manager, ytd-app {
-        max-height: 500vh !important;
-        overflow-y: hidden !important;
-    }`,
-}
-
 function setScrolling(path, override) {
     path = path ?? window.location.pathname
-    let name
-    if (override) {
-        name = override
-    } else {
-        name = scrollConfig.special[path] ?? scrollConfig.default
-    }
+    const key = override
+        ? override
+        : (scrollConfig.special[path] ?? scrollConfig.default)
 
     for (const item in scrollEnum) {
         removeStyle('scroll-' + item)
     }
-    if (name in scrollEnum) {
-        addStyle('scroll-' + name, scrollEnum[name])
+    if (key in scrollEnum) {
+        addStyle('scroll-' + key, scrollEnum[key])
     }
 }
 
@@ -221,7 +246,7 @@ function blockScreen(message) {
         return
     }
     const mask = document.createElement('div')
-    const style = {
+    Object.assign(mask.style, {
         zIndex: '9999',
         position: 'fixed',
         top: '0',
@@ -233,8 +258,7 @@ function blockScreen(message) {
         paddingTop: '30vh',
         color: 'white',
         background: 'rgba(0, 0, 0, 0.5)'
-    }
-    Object.assign(mask.style, style)
+    })
     mask.innerText = message
     mask.setAttribute('class', 'eytft-page-mask')
 
@@ -248,7 +272,7 @@ function blockScreen(message) {
     screenState.blocked = true
     screenState.nextCheck = null
     setScrolling(null, 'none')
-    addStyle('page-blur', 'ytd-app { filter: blur(5px); }')
+    addStyle('page-blur', `${selectors.app} { filter: blur(5px); }`)
     document.body.appendChild(mask)
 }
 
