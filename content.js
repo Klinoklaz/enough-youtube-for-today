@@ -10,8 +10,8 @@ const selectors = {
 const selectorsMobile = {
     videoSetting: 'player-settings-menu .ytListItemViewModelTitleWrapper',
     speedSettingText: 'Speed',
-    app: 'ytm-app',
-    thumbnail: 'ytm-thumbnail-cover',
+    app: 'ytm-app, body > #player-container-id',
+    thumbnail: ':is(ytm-thumbnail-cover, ytm-compact-thumbnail)',
 }
 
 const scrollEnum = {
@@ -227,7 +227,9 @@ function handleNavigate(event) {
     lastScrollY = 0
     const url = new URL(event.destination.url)
     setPlaybackRate(url)
-    setScrolling(url.pathname)
+    if (!screenState.blocked) {
+        setScrolling(url.pathname)
+    }
 }
 
 // SPA location change detection easy solution
@@ -254,8 +256,9 @@ function blockScreen(message) {
         width: '100vw',
         height: '100vh',
         textAlign: 'center',
-        fontSize: '8em',
-        paddingTop: '30vh',
+        boxSizing: 'border-box',
+        padding: '33vh 1em 0 1em',
+        fontSize: 'clamp(3em, 5vw, 8em)',
         color: 'white',
         background: 'rgba(0, 0, 0, 0.5)'
     })
@@ -339,39 +342,31 @@ function checkTimeLimit() {
 }
 
 browser.storage.sync.get().then(data => {
-    for (const name in hideableParts) {
-        if (!data || (data[name] ?? true)) {
-            hide(name)
-        } else {
-            removeStyle(name)
-        }
-    }
+    Object.assign(scrollConfig, data.scrolling)
+    setScrolling()
 
     data = data ?? {}
     setTimeLimit(data.timeLimit)
     checkTimeLimit()
 
+    for (const key in hideableParts) {
+        if (!data || (data[key] ?? true)) {
+            hide(key)
+        } else {
+            removeStyle(key)
+        }
+    }
+
     if (data.playbackRate) {
         playbackCtl.rate = data.playbackRate
         setPlaybackRate(window.location)
     }
-
-    if (data.scrolling) {
-        Object.assign(scrollConfig, data.scrolling)
-    }
-    setScrolling()
 })
 
 browser.storage.sync.onChanged.addListener(changes => {
-    for (const name in hideableParts) {
-        if (!(name in changes)) {
-            continue
-        }
-        if (changes[name].newValue) {
-            hide(name)
-        } else {
-            removeStyle(name)
-        }
+    if (changes.scrolling) {
+        Object.assign(scrollConfig, changes.scrolling.newValue)
+        setScrolling()
     }
 
     if (changes.timeLimit) {
@@ -379,13 +374,19 @@ browser.storage.sync.onChanged.addListener(changes => {
         checkTimeLimit()
     }
 
+    for (const key in hideableParts) {
+        if (!(key in changes)) {
+            continue
+        }
+        if (changes[key].newValue) {
+            hide(key)
+        } else {
+            removeStyle(key)
+        }
+    }
+
     if (changes.playbackRate) {
         playbackCtl.rate = changes.playbackRate.newValue
         setPlaybackRate(window.location)
-    }
-
-    if (changes.scrolling) {
-        Object.assign(scrollConfig, changes.scrolling.newValue)
-        setScrolling()
     }
 })
