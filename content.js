@@ -71,6 +71,7 @@ const playbackCtl = {
     retry: 10,
     id: null,
     rate: 1,
+    autoPlay: false,
 }
 
 function playbackCtlReset() {
@@ -220,6 +221,17 @@ function setScrolling(path, override) {
     }
 }
 
+// only for playlists, doesn't work on pc
+function disableAutoPlay(url) {
+    const param = url?.searchParams
+    if (!param?.has('list') || !param.has('pp')) {
+        return
+    }
+    param.delete('pp')
+    url.searchParams = param
+    window.location.replace(url)
+}
+
 function handleNavigate(event) {
     if (event.hashChange || event.downloadRequest !== null) {
         return
@@ -227,6 +239,9 @@ function handleNavigate(event) {
     lastScrollY = 0
     const url = new URL(event.destination.url)
     setPlaybackRate(url)
+    if (!playbackCtl.autoPlay) {
+        disableAutoPlay(url)
+    }
     if (!screenState.blocked) {
         setScrolling(url.pathname)
     }
@@ -360,6 +375,7 @@ browser.storage.sync.get().then(data => {
     if (data.playbackRate) {
         playbackCtl.rate = data.playbackRate
         setPlaybackRate(window.location)
+        disableAutoPlay(new URL(window.location.href))
     }
 })
 
@@ -388,5 +404,6 @@ browser.storage.sync.onChanged.addListener(changes => {
     if (changes.playbackRate) {
         playbackCtl.rate = changes.playbackRate.newValue
         setPlaybackRate(window.location)
+        disableAutoPlay(new URL(window.location.href))
     }
 })
