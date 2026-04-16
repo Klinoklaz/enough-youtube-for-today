@@ -3,14 +3,19 @@
 const selectors = {
     videoSetting: '.ytp-menuitem .ytp-menuitem-label',
     speedSettingText: 'Playback speed',
-    app: 'ytd-app', // entire page
+    fullView: 'ytd-app', // `body` won't work
+    genreMeta: 'meta[itemprop="genre"]',
+    shortsPlayer: '#shorts-player',
     thumbnail: 'yt-thumbnail-view-model',
+    get specialThumbnail() {
+        return `a:has(${this.thumbnail} .ytSpecIconShapeHost)`
+    }
 }
 
 const selectorsMobile = {
-    videoSetting: 'player-settings-menu .ytListItemViewModelTitleWrapper',
-    speedSettingText: 'Speed',
-    app: 'ytm-app, body > #player-container-id',
+    videoSetting: 'button.player-settings-icon',
+    speedSettingText: '',
+    fullView: 'ytm-app, body > #player-container-id',
     thumbnail: ':is(ytm-thumbnail-cover, ytm-compact-thumbnail)',
 }
 
@@ -31,17 +36,19 @@ const scrollEnum = {
     }`,
 }
 
+const scrollEnumMobile = {
+    short: `ytm-app {
+        max-height: 500vh !important;
+        overflow-y: hidden !important;
+    }`,
+    long: `ytm-app {
+        max-height: 1000vh !important;
+        overflow-y: hidden !important;
+    }`,
+}
+
 if (window.location.hostname === MOBILE_DOMAIN) {
-    Object.assign(scrollEnum, {
-        long: `ytm-app {
-            max-height: 500vh !important;
-            overflow-y: hidden !important;
-        }`,
-        short: `ytm-app {
-            max-height: 250vh !important;
-            overflow-y: hidden !important;
-        }`,
-    })
+    Object.assign(scrollEnum, scrollEnumMobile)
     Object.assign(selectors, selectorsMobile)
     Object.assign(hideableParts, hideablePartsMobile)
 }
@@ -173,8 +180,8 @@ function checkIsMV() {
     if (MVDB.data.has(match[1])) {
         return true
     }
-    const genre = document
-        .querySelector('meta[itemprop="genre"]')?.content
+    const genre = document.querySelector(
+        selectors.genreMeta)?.content
     const res = genre && genre.includes('Music')
     if (res) {
         MVDB.data.set(match[1], true)
@@ -193,14 +200,13 @@ function updateMVDB() {
     }
 
     // thumbnail with the music (& probably? other special) icon
-    const selector = `a:has(
-        ${selectors.thumbnail} .ytSpecIconShapeHost)`
-    document.querySelectorAll(selector).forEach(item => {
+    const thumb = document.querySelectorAll(
+        selectors.specialThumbnail)
+    thumb.forEach(item => {
         const match = item.getAttribute('href')?.match(v)
-        if (!match || !match[1]) {
-            return
+        if (match && match[1]) {
+            MVDB.data.set(match[1], true)
         }
-        MVDB.data.set(match[1], true)
     })
 
     // no anon function to assure idempotency
@@ -284,13 +290,13 @@ function blockScreen(message) {
     const vid = document.querySelector('video')
     if (vid && !vid.paused) {
         vid.pause() // doesn't work for shorts
-        document.querySelector('#shorts-player')?.click()
+        document.querySelector(selectors.shortsPlayer)?.click()
     }
 
     screenState.blocked = true
     screenState.nextCheck = null
     setScrolling(null, 'none')
-    addStyle('page-blur', `${selectors.app} { filter: blur(5px); }`)
+    addStyle('page-blur', `${selectors.fullView} { filter: blur(5px); }`)
     document.body.appendChild(mask)
 }
 
