@@ -55,4 +55,4 @@ const hideablePartsMobile = {
 }
 
 const MOBILE_DOMAIN = 'm.youtube.com'
-const HAS_NAVIGATION = navigation && 'onnavigate' in navigation // feature detection
+const HAS_NAVIGATION = typeof navigation === 'object' && 'onnavigate' in navigation // feature detection
