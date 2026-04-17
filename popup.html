@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
     <style>
       .note {
@@ -28,7 +29,7 @@
         display: block;
         line-height: 2em;
       }
-      .range-label {
+      .input-v-align {
         vertical-align: top;
       }
       .hide {
@@ -78,6 +79,7 @@
       }
       .time-picker-expand {
         color: gray;
+        font-size: x-small;
         cursor: pointer;
         user-select: none;
         pointer-events: auto;
@@ -103,6 +105,9 @@
         color: lightgray;
         cursor: pointer;
         pointer-events: auto;
+        width: 1.5em;
+        text-align: right;
+        display: inline-block;
       }
       .clear-button:hover {
         color: gray;
@@ -130,6 +135,12 @@
         }
         li:hover {
           background-color: gray;
+        }
+      }
+      /* mobile viewport is actually larger */
+      @media (min-width: 22em) {
+        .clear-button {
+          top: -0.2em;
         }
       }
       @media (prefers-color-scheme: dark) {
@@ -194,7 +205,7 @@
             <div class="time-picker-wrap" id="e-x-0">
               <input placeholder=" " class="time"><span class="clear-button">×</span>
             </div>
-            <span class="time-picker-expand toggle2">⯆</span>
+            <span class="time-picker-expand input-v-align toggle2">▼</span>
           </div>
           <div class="hide toggle2 expandable">
             <div class="time-picker-wrap" id="s-x-1">
@@ -218,7 +229,7 @@
     <div id="speed" class="hide content toggle">
       <p class="menu title"><span>&lt;</span><span>Default Speed</span></p>
       <input type="range" id="playback-rate" min="0.25" max="2" step="0.25">
-      <label for="playback-rate" class="range-label">1x</label>
+      <label for="playback-rate" class="input-v-align">1x</label>
       <p class="note">
         * It'll try to avoid altering playback speed of music videos.
       </p>
