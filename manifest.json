@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Enough YouTube for Today",
-  "version": "0.2.2",
-  "description": "Anti-addition extension for YouTube.",
+  "version": "0.2.3",
+  "description": "An anti-addiction tool for YouTube.",
   "icons": {
     "48": "icon.svg"
   },
