@@ -34,6 +34,8 @@ const hideableParts = {
     related: '#related',
     // comment section
     comments: 'ytd-comments#comments',
+    // entire homepage content
+    home: 'ytd-browse[page-subtype="home"]',
     // shorts in homepage and sidebar
     shorts: 'ytd-rich-shelf-renderer[is-shorts], #guide a[title="Shorts"]',
     // game recommendation on homepage
@@ -48,6 +50,7 @@ const hideablePartsMobile = {
     related: 'ytm-item-section-renderer:has(#related-chips-sentinel)',
     comments: `ytm-item-section-renderer:has(
         yt-carousel-item-view-model[aria-label="Comments"])`,
+    home: '.page-container .tab-content[tab-title="Home"]',
     shorts: 'ytm-rich-section-renderer:has(ytm-shorts-lockup-view-model)',
     playables: 'ytm-rich-section-renderer:has(mini-game-card-view-model)',
     // next/prev button on the player
