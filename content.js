@@ -138,18 +138,8 @@ function setPlaybackRate(url) {
 const MVDB = {
     data: new Map,
     init: false,
-    // check like button animation config
-    // this won't work across navigation, one-time use only
-    isMV: function() {
-        const res = document.body.textContent
-            .includes('animated_like_music')
-        if (res) {
-            const search = new URLSearchParams(location.search)
-            this.data.set(search.get('v'), true)
-        }
-        return res
-    },
-    updating: null
+    updating: null,
+    isMV: initCheckIsMV,
 }
 const v = /[?&]v=([0-9a-zA-Z_-]+)/ // video id
 let lastScrollY = 0
@@ -171,22 +161,24 @@ function handleScrollPagination() {
     MVDB.updating = setTimeout(updateMVDB, 1000)
 }
 
+// one-time use only, won't work across navigation
+function initCheckIsMV() {
+    // like button animation config, meta tag
+    const res = document.body.textContent
+        .includes('animated_like_music')
+        || document.querySelector(selectors.genreMeta)
+        ?.content?.includes('Music')
+    if (res) {
+        const search = new URLSearchParams(location.search)
+        this.data.set(search.get('v'), true)
+    }
+    return res
+}
+
 // this will be used across navigation
 function checkIsMV() {
     const match = location.search.match(v)
-    if (!match || !match[1]) {
-        return false
-    }
-    if (MVDB.data.has(match[1])) {
-        return true
-    }
-    const genre = document.querySelector(
-        selectors.genreMeta)?.content
-    const res = genre && genre.includes('Music')
-    if (res) {
-        MVDB.data.set(match[1], true)
-    }
-    return res
+    return match && match[1] && MVDB.data.has(match[1])
 }
 
 function updateMVDB() {
