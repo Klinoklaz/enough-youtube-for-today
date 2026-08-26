@@ -1,22 +1,12 @@
 /// <reference path="shared.js" />
 
 const selectors = {
-    videoSetting: '.ytp-menuitem .ytp-menuitem-label',
-    speedSettingText: 'Playback speed',
     fullView: 'ytd-app', // `body` won't work
-    genreMeta: 'meta[itemprop="genre"]',
     shortsPlayer: '#shorts-player',
-    thumbnail: 'yt-thumbnail-view-model',
-    get specialThumbnail() {
-        return `a:has(${this.thumbnail} .ytSpecIconShapeHost)`
-    }
 }
 
 const selectorsMobile = {
-    videoSetting: 'button.player-settings-icon',
-    speedSettingText: '',
     fullView: 'ytm-app, body > #player-container-id',
-    thumbnail: ':is(ytm-thumbnail-cover, ytm-compact-thumbnail)',
 }
 
 const scrollEnum = {
@@ -47,7 +37,8 @@ const scrollEnumMobile = {
     }`,
 }
 
-if (window.location.hostname === MOBILE_DOMAIN) {
+const isMobile = window.location.hostname === MOBILE_DOMAIN
+if (isMobile) {
     Object.assign(scrollEnum, scrollEnumMobile)
     Object.assign(selectors, selectorsMobile)
     Object.assign(hideableParts, hideablePartsMobile)
@@ -74,135 +65,24 @@ function hide(name) {
     addStyle(name, selector + '{ display: none !important; }')
 }
 
-const playbackCtl = {
-    retry: 10,
-    id: null,
-    rate: 1,
-    autoPlay: false,
-}
-
-function playbackCtlReset() {
-    clearInterval(playbackCtl.id)
-    playbackCtl.id = null
-    playbackCtl.retry = 10
-}
-
-function handleSpeedMenuClick() {
-    playbackCtlReset()
-    document.querySelector('video').playbackRate = 1
-}
-
-function playbackCtlExec() {
-    if (playbackCtl.retry-- <= 0) {
-        playbackCtlReset()
+function setPlaybackRate(rate, isInit, giveUp) {
+    const scriptId = 'eytft-injected-script'
+    document.querySelector('#' + scriptId)?.remove()
+    if (giveUp) {
         return
     }
-    const vid = document.querySelector('video')
-    if (!vid) {
-        return
-    }
-    vid.playbackRate = MVDB.isMV() ? 1 : playbackCtl.rate
-    if (playbackCtl.retry % 2 === 0) {
-        return
-    }
-    updateMVDB()
-    // give up control if user choses manual setting
-    const menu = document.querySelectorAll(selectors.videoSetting)
-    menu.forEach(item => {
-        if (item.innerText === selectors.speedSettingText) {
-            const speedMenu = item.parentElement
-            speedMenu.addEventListener('click', handleSpeedMenuClick)
-        }
-    })
-}
 
-function setPlaybackRate(url) {
-    if (playbackCtl.id) {
-        playbackCtlReset()
+    const script = document.createElement('script')
+    script.id = scriptId
+    script.src = browser.runtime.getURL('main.js')
+    script.setAttribute('data-playback-rate', rate ?? 1)
+    if (isInit) {
+        script.setAttribute('data-is-init', 'true')
     }
-    // no known way to detect mv in playlist
-    // avoid playlists altogether
-    if (url?.searchParams?.get('list')) {
-        return
+    if (isMobile) {
+        script.setAttribute('data-is-mobile', 'true')
     }
-    // not in watch page
-    const path = url?.pathname ?? ''
-    if (!path.startsWith('/watch') && !path.startsWith('/shorts')) {
-        clearTimeout(MVDB.updating)
-        MVDB.updating = setTimeout(updateMVDB, 2000)
-        return
-    }
-    playbackCtl.id = setInterval(playbackCtlExec, 2000)
-}
-
-const MVDB = {
-    data: new Map,
-    init: false,
-    updating: null,
-    isMV: initCheckIsMV,
-}
-const v = /[?&]v=([0-9a-zA-Z_-]+)/ // video id
-let lastScrollY = 0
-
-function handleScrollPagination() {
-    if (window.scrollY < lastScrollY) {
-        return
-    }
-    const distance = window.scrollY - lastScrollY
-    lastScrollY = window.scrollY
-    // scroll pass half screen, assume new content is rendered
-    // not accurate
-    if (distance < window.innerHeight / 2) {
-        return
-    }
-    if (MVDB.updating) {
-        clearTimeout(MVDB.updating)
-    }
-    MVDB.updating = setTimeout(updateMVDB, 1000)
-}
-
-// one-time use only, won't work across navigation
-function initCheckIsMV() {
-    // like button animation config, meta tag
-    const res = document.body.textContent
-        .includes('animated_like_music')
-        || document.querySelector(selectors.genreMeta)
-        ?.content?.includes('Music')
-    if (res) {
-        const search = new URLSearchParams(location.search)
-        this.data.set(search.get('v'), true)
-    }
-    return res
-}
-
-// this will be used across navigation
-function checkIsMV() {
-    const match = location.search.match(v)
-    return match && match[1] && MVDB.data.has(match[1])
-}
-
-function updateMVDB() {
-    if (!MVDB.init) {
-        MVDB.isMV = checkIsMV
-        MVDB.init = true
-    }
-    if (MVDB.updating) {
-        clearTimeout(MVDB.updating)
-        MVDB.updating = null
-    }
-
-    // thumbnail with the music (& probably? other special) icon
-    const thumb = document.querySelectorAll(
-        selectors.specialThumbnail)
-    thumb.forEach(item => {
-        const match = item.getAttribute('href')?.match(v)
-        if (match && match[1]) {
-            MVDB.data.set(match[1], true)
-        }
-    })
-
-    // no anon function to assure idempotency
-    document.addEventListener('scrollend', handleScrollPagination)
+    document.head.appendChild(script)
 }
 
 function setScrolling(path, override) {
@@ -219,29 +99,16 @@ function setScrolling(path, override) {
     }
 }
 
-// only for playlists, doesn't work on pc
-function disableAutoPlay(url) {
-    const param = url?.searchParams
-    if (!param?.has('list') || !param.has('pp')) {
-        return
-    }
-    param.delete('pp')
-    url.searchParams = param
-    window.location.replace(url)
-}
-
 function handleNavigate(event) {
     if (event.hashChange || event.downloadRequest !== null) {
         return
     }
-    lastScrollY = 0
     const url = new URL(event.destination.url)
-    setPlaybackRate(url)
-    if (!playbackCtl.autoPlay) {
-        disableAutoPlay(url)
-    }
     if (!screenState.blocked) {
         setScrolling(url.pathname)
+    }
+    if (url.searchParams.has('list')) {
+        setPlaybackRate(1, false, true)
     }
 }
 
@@ -371,9 +238,7 @@ browser.storage.sync.get().then(data => {
     }
 
     if (data.playbackRate) {
-        playbackCtl.rate = data.playbackRate
-        setPlaybackRate(window.location)
-        disableAutoPlay(new URL(window.location.href))
+        setPlaybackRate(data.playbackRate, true)
     }
 })
 
@@ -400,8 +265,6 @@ browser.storage.sync.onChanged.addListener(changes => {
     }
 
     if (changes.playbackRate) {
-        playbackCtl.rate = changes.playbackRate.newValue
-        setPlaybackRate(window.location)
-        disableAutoPlay(new URL(window.location.href))
+        setPlaybackRate(changes.playbackRate.newValue)
     }
 })

@@ -16,6 +16,13 @@
     "gecko_android": {}
   },
   "permissions": ["storage"],
+  "web_accessible_resources": [{
+    "resources": ["main.js"],
+    "matches": [
+      "*://www.youtube.com/*",
+      "*://m.youtube.com/*"
+    ]
+  }],
   "content_scripts": [
     {
       "matches": [

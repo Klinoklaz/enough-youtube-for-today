@@ -77,13 +77,16 @@ const playbackLabel = document.querySelector('#playback-rate + label')
 // init form values
 browser.storage.sync.get().then(async (res) => {
     const url = await getURL()
+    let hidden = ''
     if (navigator.userAgent.includes('Mobi')
         || url?.hostname === MOBILE_DOMAIN) {
+        hidden = '.desktop-only'
         Object.assign(hideableParts, hideablePartsMobile)
     } else {
-        document.querySelectorAll('.mobile-only')
-            .forEach(item => { item.style.display = 'none' })
+        hidden = '.mobile-only'
     }
+    document.querySelectorAll(hidden)
+        .forEach(item => { item.style.display = 'none' })
 
     res = res ?? {}
     for (const item in hideableParts) {
