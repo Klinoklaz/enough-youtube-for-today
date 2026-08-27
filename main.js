@@ -1,23 +1,15 @@
 // will run in main world (the actual ytb webpage)
+// playback speed control
 (() => {
-    // playback speed control:
-    // - detect mv using like button config and meta tag at first page load
-    // - detect mv using mutation observer after navigation
-    // - give up if in playlist (implemented in content.js)
-
-    // extract params passed by content.js
     const thisElm = document.currentScript
-    const isInit = Boolean(thisElm.dataset.isInit)
-    const isMobile = Boolean(thisElm.dataset.isMobile)
-    const customRate = Number(thisElm.dataset.playbackRate ?? 1)
 
     const keywords = {
         metaTag: 'meta[itemprop="genre"]',
         mvMetaText: /music/i,
         mvLikeButton: 'animated_like_music',
-        thumbnail: isMobile
-            ? 'yt-thumbnail-view-model'
-            : ':is(ytm-thumbnail-cover, ytm-compact-thumbnail)',
+        thumbnail: thisElm.dataset.isMobile
+            ? ':is(ytm-thumbnail-cover, ytm-compact-thumbnail)'
+            : 'yt-thumbnail-view-model',
         get mvThumbnail() {
             return `a:has(${this.thumbnail} .ytSpecIconShapeHost)`
         }
@@ -26,47 +18,86 @@
     const mvDB = new Set
 
     function getVid(href) {
+        if (href instanceof URLSearchParams) {
+            return href.get('v')
+        }
         const m = String(href).match(/[?&]v=([0-9a-zA-Z_-]+)/)
         return m && m[1] ? m[1] : null
     }
 
-    function searchMv(elm) {
-        if (!(elm instanceof Element)) {
-            return
+    class Poller {
+        constructor(callback, interval, count) {
+            this.count = this.counter = count ?? 10
+            this.interval = interval ?? 1000
+            this.id = null
+            this.callback = callback
         }
-        elm.querySelectorAll(keywords.mvThumbnail).forEach(item => {
+
+        exec() {
+            if (this.counter-- < 0) {
+                this.stop()
+            } else {
+                this.callback()
+            }
+        }
+
+        stop() {
+            clearInterval(this.id)
+            this.id = null
+        }
+
+        start(count) {
+            this.stop()
+            this.counter = count ?? this.count
+            this.id = setInterval(() => this.exec(), this.interval)
+        }
+    }
+
+    // - initial page load
+    const mvPoller = new Poller(() => {
+        document.querySelectorAll(keywords.mvThumbnail).forEach(item => {
             mvDB.add(getVid(item.getAttribute('href')))
         })
-    }
-
-    function handleDomLoad() {
-        searchMv(document)
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', handleDomLoad)
-    } else {
-        handleDomLoad()
-    }
-    // - first page load, test if current page is mv
-    // this is different from dom loaded event
-    // bc the script can be injected at any time
+        /* alternative mv detection:
+        ytInitialData.contents
+            .twoColumnBrowseResultsRenderer
+            .tabs[*].tabRenderer.content
+            ..lockupViewModel
+            .contentImage
+            .thumbnailViewModel
+            .overlays[*]
+            .thumbnailBottomOverlayViewModel
+            .badges[*]
+            .thumbnailBadgeViewModel
+            .icon
+            .sources[*]
+            .clientResource.imageName === 'MUSIC'
+        */
+    }, 3000, 5)
+    window.addEventListener('load', () => mvPoller.start())
+    // test if current page is mv
     const metaTag = document.querySelector(keywords.metaTag)
-    const params = new URLSearchParams(location.search)
-    if (isInit && params.has('v') && (
+    const query = new URLSearchParams(location.search)
+    if (query.has('v') && (
         keywords.mvMetaText.test(metaTag?.content) ||
         document.body.textContent.includes(keywords.mvLikeButton)
     )) {
-        mvDB.add(params.get('v'))
+        mvDB.add(query.get('v'))
     }
 
     function setPlaybackRate(video) {
         if (!(video instanceof HTMLVideoElement)) {
             return
         }
-        const vid = getVid(location.search)
+        const query = new URLSearchParams(location.search)
+        // give up if in playlist
+        if (query.has('list')) {
+            return
+        }
+        const vid = getVid(query)
         video.playbackRate = vid && mvDB.has(vid)
-            ? video.playbackRate : customRate
+            ? video.playbackRate
+            : Number(thisElm.dataset.playbackRate ?? 1)
     }
 
     // - alter playback speed globally
@@ -91,44 +122,44 @@
     }
     document.addEventListener('keydown', handleManualControl)
 
-    // - observe navigation / lazy loading
-    const observer = new MutationObserver((muList) => {
-        for (const mutation of muList) {
-            if (mutation.type !== 'childList') {
-                continue
-            }
-            mutation.addedNodes.forEach(node => {
-                if (!(node instanceof Element)) {
-                    return
-                }
-                if (node.matches(keywords.mvThumbnail)) {
-                    mvDB.add(getVid(node.getAttribute('href')))
-                } else {
-                    searchMv(node) // search subtree
-                }
-            })
+    // - observe paginating / lazy loading
+    function getScrollHandler() {
+        let maxScrollY = 0
+        const reset = function () {
+            maxScrollY = 0
         }
-    })
-    observer.observe(
-        document.documentElement, {childList: true, subtree: true})
+        const handler = function () {
+            if (window.scrollY < maxScrollY) {
+                return
+            }
+            // scroll pass half screen, assume new content is rendered
+            if (window.scrollY - maxScrollY >= window.innerHeight / 2) {
+                mvPoller.start(3)
+            }
+            // remember longest scroll
+            maxScrollY = window.scrollY
+        }
+        return {handler, reset}
+    }
+    const {
+        handler: handleScroll, reset: resetScroll
+    } = getScrollHandler()
+    document.addEventListener('scrollend', handleScroll)
 
-    // - register clean up action to ensure idempotency
-    const selfObserver = new MutationObserver((muList) => {
+    // - watch dataset change
+    const selfObserver = new MutationObserver(muList => {
         for (const mutation of muList) {
-            if (!mutation.removedNodes.length) {
+            if (mutation.type !== 'attributes') {
                 continue
             }
-            mutation.removedNodes.forEach(node => {
-                if (node !== thisElm) {
-                    return
-                }
-                selfObserver.disconnect()
-                observer.disconnect()
-                HTMLVideoElement.prototype.play = realPlay
-                document.removeEventListener('keydown', handleManualControl)
-                document.removeEventListener('DOMContentLoaded', handleDomLoad)
-            })
+            const name = mutation.attributeName
+            if (name === 'data-navigation') {
+                resetScroll()
+                mvPoller.start(5)
+            } else if (name === 'data-playback-rate') {
+                setPlaybackRate(document.querySelector('video'))
+            }
         }
     })
-    selfObserver.observe(thisElm.parentNode, {childList: true})
+    selfObserver.observe(thisElm, {attributes: true})
 })()

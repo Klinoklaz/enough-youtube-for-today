@@ -65,24 +65,27 @@ function hide(name) {
     addStyle(name, selector + '{ display: none !important; }')
 }
 
-function setPlaybackRate(rate, isInit, giveUp) {
-    const scriptId = 'eytft-injected-script'
-    document.querySelector('#' + scriptId)?.remove()
-    if (giveUp) {
-        return
+function setPlaybackRate(rate) {
+    // pass parameters using data-* attributes
+    const attr = {
+        rate: 'data-playback-rate',
+        nav: 'data-navigation',
+        isMobile: 'data-is-mobile',
     }
 
-    const script = document.createElement('script')
-    script.id = scriptId
-    script.src = browser.runtime.getURL('main.js')
-    script.setAttribute('data-playback-rate', rate ?? 1)
-    if (isInit) {
-        script.setAttribute('data-is-init', 'true')
+    const id = 'eytft-injected-script'
+    const script = document.querySelector('#' + id)
+    if (script) {
+        script.setAttribute(attr.nav, location.href)
+        rate && script.setAttribute(attr.rate, rate)
+        return
     }
-    if (isMobile) {
-        script.setAttribute('data-is-mobile', 'true')
-    }
-    document.head.appendChild(script)
+    const newScript = document.createElement('script')
+    newScript.id = id
+    newScript.src = browser.runtime.getURL('main.js')
+    newScript.setAttribute(attr.rate, rate ?? 1)
+    newScript.setAttribute(attr.isMobile, isMobile ? 'true' : '')
+    document.head.appendChild(newScript)
 }
 
 function setScrolling(path, override) {
@@ -103,12 +106,9 @@ function handleNavigate(event) {
     if (event.hashChange || event.downloadRequest !== null) {
         return
     }
-    const url = new URL(event.destination.url)
+    setPlaybackRate()
     if (!screenState.blocked) {
-        setScrolling(url.pathname)
-    }
-    if (url.searchParams.has('list')) {
-        setPlaybackRate(1, false, true)
+        setScrolling(new URL(event.destination.url).pathname)
     }
 }
 
@@ -238,7 +238,7 @@ browser.storage.sync.get().then(data => {
     }
 
     if (data.playbackRate) {
-        setPlaybackRate(data.playbackRate, true)
+        setPlaybackRate(data.playbackRate)
     }
 })
 
