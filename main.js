@@ -73,7 +73,8 @@
             .sources[*]
             .clientResource.imageName === 'MUSIC'
         */
-    }, 3000, 5)
+    }, 2000, 5)
+    mvPoller.start() // for situation when window already loaded
     window.addEventListener('load', () => mvPoller.start())
     // test if current page is mv
     const metaTag = document.querySelector(keywords.metaTag)
