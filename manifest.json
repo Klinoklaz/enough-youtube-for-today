@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Enough YouTube for Today",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "An anti-addiction tool for YouTube.",
   "icons": {
     "48": "icon.svg"
@@ -12,10 +12,10 @@
       "data_collection_permissions": {
         "required": ["none"]
       },
-      "strict_min_version": "54.0"
+      "strict_min_version": "58.0"
     },
     "gecko_android": {
-      "strict_min_version": "54.0"
+      "strict_min_version": "58.0"
     }
   },
   "permissions": ["storage"],

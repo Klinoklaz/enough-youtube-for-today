@@ -15,7 +15,7 @@ const scrollEnum = {
         overflow-y: hidden !important;
     }`,
     // 2.5 screens
-    short: `ytd-page-manager {
+    short: `ytd-page-manager, ytd-app {
         max-height: 250vh !important;
         overflow-y: hidden !important;
     }`,
@@ -239,7 +239,7 @@ browser.storage.sync.get().then(data => {
         }
     }
 
-    if (data.playbackRate) {
+    if (HAS_NAVIGATION && data.playbackRate) {
         setPlaybackRate(data.playbackRate)
     }
 })
@@ -266,7 +266,7 @@ browser.storage.sync.onChanged.addListener(changes => {
         }
     }
 
-    if (changes.playbackRate) {
+    if (HAS_NAVIGATION && changes.playbackRate) {
         setPlaybackRate(changes.playbackRate.newValue)
     }
 })
