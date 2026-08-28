@@ -178,21 +178,23 @@ function checkTimeLimit() {
     })
 
     const ytbEnd = new Date
+    // 'z' is greater than any valid value
     let nextYtbTime = 'z'
     let isYtbTime = false
     // valid entry must take the form of ["start", "end"]
     let isValid = false
     for (const p of timeLimit[now.getDay()]) {
-        if (p?.length !== 2 || !p[0] || !p[1] || p[0] >= p[1]) {
+        const [s, e] = p?.length === 2 ? p : []
+        if (!s || !e || s >= e) {
             continue
         }
         isValid = true
-        if (p[0] > time && p[0] < nextYtbTime) {
-            nextYtbTime = p[0]
+        if (s > time && s < nextYtbTime) {
+            nextYtbTime = s
         }
-        if (time >= p[0] && time < p[1]) {
+        if (time >= s && time < e) {
             isYtbTime = true
-            ytbEnd.setHours(...p[1].split(':'), 0, 0)
+            ytbEnd.setHours(...e.split(':'), 0, 0)
         }
     }
 

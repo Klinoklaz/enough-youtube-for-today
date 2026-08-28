@@ -11,9 +11,12 @@
       "id": "EYTfT@klinoklaz.app",
       "data_collection_permissions": {
         "required": ["none"]
-      }
+      },
+      "strict_min_version": "54.0"
     },
-    "gecko_android": {}
+    "gecko_android": {
+      "strict_min_version": "54.0"
+    }
   },
   "permissions": ["storage"],
   "web_accessible_resources": [{
