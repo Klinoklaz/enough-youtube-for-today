@@ -9,7 +9,7 @@
         mvLikeButton: 'animated_like_music',
         thumbnail: thisElm.dataset.isMobile
             ? ':is(ytm-thumbnail-cover, ytm-compact-thumbnail)'
-            : 'yt-thumbnail-view-model',
+            : 'yt-thumbnail-badge-view-model',
         get mvThumbnail() {
             return `a:has(${this.thumbnail} .ytSpecIconShapeHost)`
         }
